@@ -22,10 +22,18 @@ class WelcomeImageGenerator:
                 img = self._download_background(background_image_url)
                 if not img:
                     # Fallback a color sólido si falla la descarga
-                    img = Image.new('RGB', (self.width, self.height), bg_color)
+                    img = Image.new('RGBA', (self.width, self.height), bg_color)
+                else:
+                    if img.mode != 'RGBA':
+                        img = img.convert('RGBA')
             else:
                 # Usar color sólido
-                img = Image.new('RGB', (self.width, self.height), bg_color)
+                img = Image.new('RGBA', (self.width, self.height), bg_color)
+            
+            # Aplicar superposición oscura para mejorar legibilidad
+            overlay = Image.new('RGBA', img.size, (0, 0, 0, 100)) # ~40% de opacidad
+            img = Image.alpha_composite(img, overlay)
+            
             draw = ImageDraw.Draw(img)
             
             # Descargar avatar del usuario
@@ -114,11 +122,16 @@ class WelcomeImageGenerator:
         return output
     
     def _draw_centered_text(self, draw, text, y, font, color):
-        """Dibujar texto centrado"""
+        """Dibujar texto centrado con borde"""
         bbox = draw.textbbox((0, 0), text, font=font)
         text_width = bbox[2] - bbox[0]
         x = (self.width - text_width) // 2
-        draw.text((x, y), text, font=font, fill=color)
+        
+        # Dibujar borde/sombra para mejorar legibilidad
+        stroke_color = 'black'
+        stroke_width = 2
+        
+        draw.text((x, y), text, font=font, fill=color, stroke_width=stroke_width, stroke_fill=stroke_color)
 
 # Instancia global
 image_generator = WelcomeImageGenerator()
