@@ -17,11 +17,26 @@ def verification_config(guild_id):
         if 'user' not in session:
             return redirect(url_for('auth.login'))
         
+        user_info = session['user']
+        
+        # Corrección: El access_token está DENTRO del diccionario 'user'
+        token = user_info.get('access_token')
+        
+        if not token:
+            # Si no hay token, forzar re-login
+            return redirect(url_for('auth.login'))
+
         # Obtener información del servidor desde Discord API
-        headers = {'Authorization': f"Bearer {session['access_token']}"}
+        headers = {'Authorization': f"Bearer {token}"}
         
         # Verificar que el usuario es administrador del servidor
-        user_guilds = requests.get('https://discord.com/api/users/@me/guilds', headers=headers).json()
+        response = requests.get('https://discord.com/api/users/@me/guilds', headers=headers)
+        
+        if response.status_code == 401:
+            # Token expirado o inválido
+            return redirect(url_for('auth.login'))
+            
+        user_guilds = response.json()
         guild_data = next((g for g in user_guilds if g['id'] == guild_id), None)
         
         if not guild_data or not (int(guild_data['permissions']) & 0x8):  # Administrator permission
@@ -59,7 +74,8 @@ def verification_config(guild_id):
     
     except Exception as e:
         logger.error(f"Error in verification config: {e}", exc_info=True)
-        return f"Error al cargar configuración: {str(e)}", 500
+        # Si ocurre un error de sesión, intentar redirigir al login
+        return redirect(url_for('auth.login'))
 
 
 @verification_bp.route('/guilds/<guild_id>/game-roles')
@@ -70,11 +86,22 @@ def game_roles_config(guild_id):
         if 'user' not in session:
             return redirect(url_for('auth.login'))
         
+        user_info = session['user']
+        token = user_info.get('access_token')
+        
+        if not token:
+            return redirect(url_for('auth.login'))
+        
         # Obtener información del servidor desde Discord API
-        headers = {'Authorization': f"Bearer {session['access_token']}"}
+        headers = {'Authorization': f"Bearer {token}"}
         
         # Verificar que el usuario es administrador del servidor
-        user_guilds = requests.get('https://discord.com/api/users/@me/guilds', headers=headers).json()
+        response = requests.get('https://discord.com/api/users/@me/guilds', headers=headers)
+        
+        if response.status_code == 401:
+            return redirect(url_for('auth.login'))
+
+        user_guilds = response.json()
         guild = next((g for g in user_guilds if g['id'] == guild_id), None)
         
         if not guild or not (int(guild['permissions']) & 0x8):  # Administrator permission
@@ -97,7 +124,7 @@ def game_roles_config(guild_id):
     
     except Exception as e:
         logger.error(f"Error in game roles config: {e}")
-        return "Error al cargar configuración", 500
+        return redirect(url_for('auth.login'))
 
 
 # API endpoints
@@ -110,7 +137,6 @@ def update_verification(guild_id):
         
         data = request.json
         
-        # --- CORRECCIÓN AQUÍ ---
         # Separar el campo 'verification_enabled' porque va en la tabla 'guilds', no en 'verification_config'
         verification_enabled = data.pop('verification_enabled', None)
         
@@ -121,7 +147,6 @@ def update_verification(guild_id):
         # 2. Actualizar estado habilitado/deshabilitado (tabla guilds)
         if verification_enabled is not None:
             db.update_guild_config(int(guild_id), verification_enabled=bool(verification_enabled))
-        # -----------------------
         
         return jsonify({'success': True})
     
