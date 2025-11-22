@@ -21,7 +21,7 @@ class Levels(commands.Cog):
             return
         
         # Verificar si el sistema de niveles está habilitado
-        guild_config = await db.get_guild_config(message.guild.id)
+        guild_config = db.get_guild_config(message.guild.id)
         if not guild_config or not guild_config.get('levels_enabled', True):
             return
         
@@ -37,7 +37,7 @@ class Levels(commands.Cog):
         self.xp_cooldowns[user_id] = current_time
         
         # Agregar XP
-        result = await db.add_xp(message.guild.id, user_id, config.XP_PER_MESSAGE)
+        result = db.add_xp(message.guild.id, user_id, config.XP_PER_MESSAGE)
         
         if result and result['leveled_up']:
             # Notificar subida de nivel
@@ -53,7 +53,7 @@ class Levels(commands.Cog):
         """Ver nivel de un usuario"""
         target = usuario or interaction.user
         
-        user_data = await db.get_user_level(interaction.guild.id, target.id)
+        user_data = db.get_user_level(interaction.guild.id, target.id)
         
         if not user_data:
             await interaction.response.send_message("No se encontraron datos para este usuario.", ephemeral=True)
@@ -88,7 +88,7 @@ class Levels(commands.Cog):
     @app_commands.command(name="ranking", description="Ver la tabla de clasificación del servidor")
     async def leaderboard(self, interaction: discord.Interaction):
         """Mostrar tabla de clasificación"""
-        leaderboard = await db.get_leaderboard(interaction.guild.id, 10)
+        leaderboard = db.get_leaderboard(interaction.guild.id, 10)
         
         if not leaderboard:
             await interaction.response.send_message("No hay datos de clasificación aún.", ephemeral=True)
@@ -133,7 +133,7 @@ class Levels(commands.Cog):
     async def reset_xp(self, interaction: discord.Interaction, usuario: discord.Member):
         """Resetear XP de un usuario"""
         try:
-            await db.create_user(interaction.guild.id, usuario.id)
+            db.create_user(interaction.guild.id, usuario.id)
             await interaction.response.send_message(f"✅ XP de {usuario.mention} ha sido reseteado.", ephemeral=True)
         except Exception as e:
             logger.error(f"Error resetting XP: {e}")

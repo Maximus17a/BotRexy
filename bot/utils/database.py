@@ -17,7 +17,7 @@ class Database:
             raise
     
     # Guild Management
-    async def get_guild_config(self, guild_id: int):
+    def get_guild_config(self, guild_id: int):
         """Obtener configuración de un servidor"""
         try:
             response = self.client.table('guilds').select('*').eq('guild_id', str(guild_id)).execute()
@@ -25,12 +25,12 @@ class Database:
                 return response.data[0]
             else:
                 # Crear configuración por defecto
-                return await self.create_guild_config(guild_id)
+                return self.create_guild_config(guild_id)
         except Exception as e:
             logger.error(f"Error getting guild config: {e}")
             return None
     
-    async def create_guild_config(self, guild_id: int):
+    def create_guild_config(self, guild_id: int):
         """Crear configuración por defecto para un servidor"""
         try:
             data = {
@@ -46,7 +46,7 @@ class Database:
             logger.error(f"Error creating guild config: {e}")
             return None
     
-    async def update_guild_config(self, guild_id: int, **kwargs):
+    def update_guild_config(self, guild_id: int, **kwargs):
         """Actualizar configuración de un servidor"""
         try:
             response = self.client.table('guilds').update(kwargs).eq('guild_id', str(guild_id)).execute()
@@ -56,19 +56,19 @@ class Database:
             return None
     
     # User Levels
-    async def get_user_level(self, guild_id: int, user_id: int):
+    def get_user_level(self, guild_id: int, user_id: int):
         """Obtener nivel y XP de un usuario"""
         try:
             response = self.client.table('users').select('*').eq('guild_id', str(guild_id)).eq('user_id', str(user_id)).execute()
             if response.data:
                 return response.data[0]
             else:
-                return await self.create_user(guild_id, user_id)
+                return self.create_user(guild_id, user_id)
         except Exception as e:
             logger.error(f"Error getting user level: {e}")
             return None
     
-    async def create_user(self, guild_id: int, user_id: int):
+    def create_user(self, guild_id: int, user_id: int):
         """Crear registro de usuario"""
         try:
             data = {
@@ -84,10 +84,10 @@ class Database:
             logger.error(f"Error creating user: {e}")
             return None
     
-    async def add_xp(self, guild_id: int, user_id: int, xp: int):
+    def add_xp(self, guild_id: int, user_id: int, xp: int):
         """Agregar XP a un usuario"""
         try:
-            user = await self.get_user_level(guild_id, user_id)
+            user = self.get_user_level(guild_id, user_id)
             if not user:
                 return None
             
@@ -119,7 +119,7 @@ class Database:
         """Calcular XP necesaria para un nivel"""
         return config.LEVEL_MULTIPLIER * (level ** 2)
     
-    async def get_leaderboard(self, guild_id: int, limit: int = 10):
+    def get_leaderboard(self, guild_id: int, limit: int = 10):
         """Obtener tabla de clasificación"""
         try:
             response = self.client.table('users').select('*').eq('guild_id', str(guild_id)).order('level', desc=True).order('xp', desc=True).limit(limit).execute()
@@ -129,19 +129,19 @@ class Database:
             return []
     
     # Welcome Configuration
-    async def get_welcome_config(self, guild_id: int):
+    def get_welcome_config(self, guild_id: int):
         """Obtener configuración de bienvenida"""
         try:
             response = self.client.table('welcome_config').select('*').eq('guild_id', str(guild_id)).execute()
             if response.data:
                 return response.data[0]
             else:
-                return await self.create_welcome_config(guild_id)
+                return self.create_welcome_config(guild_id)
         except Exception as e:
             logger.error(f"Error getting welcome config: {e}")
             return None
     
-    async def create_welcome_config(self, guild_id: int):
+    def create_welcome_config(self, guild_id: int):
         """Crear configuración de bienvenida por defecto"""
         try:
             data = {
@@ -158,7 +158,7 @@ class Database:
             logger.error(f"Error creating welcome config: {e}")
             return None
     
-    async def update_welcome_config(self, guild_id: int, **kwargs):
+    def update_welcome_config(self, guild_id: int, **kwargs):
         """Actualizar configuración de bienvenida"""
         try:
             response = self.client.table('welcome_config').update(kwargs).eq('guild_id', str(guild_id)).execute()
@@ -168,19 +168,19 @@ class Database:
             return None
     
     # Automod Configuration
-    async def get_automod_config(self, guild_id: int):
+    def get_automod_config(self, guild_id: int):
         """Obtener configuración de automoderación"""
         try:
             response = self.client.table('automod_config').select('*').eq('guild_id', str(guild_id)).execute()
             if response.data:
                 return response.data[0]
             else:
-                return await self.create_automod_config(guild_id)
+                return self.create_automod_config(guild_id)
         except Exception as e:
             logger.error(f"Error getting automod config: {e}")
             return None
     
-    async def create_automod_config(self, guild_id: int):
+    def create_automod_config(self, guild_id: int):
         """Crear configuración de automoderación por defecto"""
         try:
             data = {
@@ -198,7 +198,7 @@ class Database:
             logger.error(f"Error creating automod config: {e}")
             return None
     
-    async def update_automod_config(self, guild_id: int, **kwargs):
+    def update_automod_config(self, guild_id: int, **kwargs):
         """Actualizar configuración de automoderación"""
         try:
             response = self.client.table('automod_config').update(kwargs).eq('guild_id', str(guild_id)).execute()
@@ -208,7 +208,7 @@ class Database:
             return None
     
     # Moderation Logs
-    async def log_moderation(self, guild_id: int, user_id: int, moderator_id: int, action: str, reason: str = None):
+    def log_moderation(self, guild_id: int, user_id: int, moderator_id: int, action: str, reason: str = None):
         """Registrar acción de moderación"""
         try:
             data = {
@@ -224,7 +224,7 @@ class Database:
             logger.error(f"Error logging moderation: {e}")
             return None
     
-    async def get_moderation_logs(self, guild_id: int, limit: int = 50):
+    def get_moderation_logs(self, guild_id: int, limit: int = 50):
         """Obtener logs de moderación"""
         try:
             response = self.client.table('moderation_logs').select('*').eq('guild_id', str(guild_id)).order('created_at', desc=True).limit(limit).execute()
@@ -234,19 +234,19 @@ class Database:
             return []
 
     # Verification Configuration
-    async def get_verification_config(self, guild_id: int):
+    def get_verification_config(self, guild_id: int):
         """Obtener configuración de verificación"""
         try:
             response = self.client.table('verification_config').select('*').eq('guild_id', str(guild_id)).execute()
             if response.data:
                 return response.data[0]
             else:
-                return await self.create_verification_config(guild_id)
+                return self.create_verification_config(guild_id)
         except Exception as e:
             logger.error(f"Error getting verification config: {e}")
             return None
     
-    async def create_verification_config(self, guild_id: int):
+    def create_verification_config(self, guild_id: int):
         """Crear configuración de verificación por defecto"""
         try:
             data = {
@@ -261,7 +261,7 @@ class Database:
             logger.error(f"Error creating verification config: {e}")
             return None
     
-    async def update_verification_config(self, guild_id: int, **kwargs):
+    def update_verification_config(self, guild_id: int, **kwargs):
         """Actualizar configuración de verificación"""
         try:
             response = self.client.table('verification_config').update(kwargs).eq('guild_id', str(guild_id)).execute()
@@ -271,19 +271,19 @@ class Database:
             return None
     
     # Game Roles Configuration
-    async def get_game_roles_config(self, guild_id: int):
+    def get_game_roles_config(self, guild_id: int):
         """Obtener configuración de roles de juegos"""
         try:
             response = self.client.table('game_roles_config').select('*').eq('guild_id', str(guild_id)).execute()
             if response.data:
                 return response.data[0]
             else:
-                return await self.create_game_roles_config(guild_id)
+                return self.create_game_roles_config(guild_id)
         except Exception as e:
             logger.error(f"Error getting game roles config: {e}")
             return None
     
-    async def create_game_roles_config(self, guild_id: int):
+    def create_game_roles_config(self, guild_id: int):
         """Crear configuración de roles de juegos por defecto"""
         try:
             data = {
@@ -298,7 +298,7 @@ class Database:
             logger.error(f"Error creating game roles config: {e}")
             return None
     
-    async def update_game_roles_config(self, guild_id: int, **kwargs):
+    def update_game_roles_config(self, guild_id: int, **kwargs):
         """Actualizar configuración de roles de juegos"""
         try:
             response = self.client.table('game_roles_config').update(kwargs).eq('guild_id', str(guild_id)).execute()

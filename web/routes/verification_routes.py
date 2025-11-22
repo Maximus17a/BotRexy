@@ -96,7 +96,7 @@ def update_verification(guild_id):
         data = request.json
         
         # Aquí se actualizaría la base de datos
-        # await db.update_verification_config(guild_id, **data)
+        # db.update_verification_config(guild_id, **data)
         
         return jsonify({'success': True})
     
@@ -115,7 +115,7 @@ def add_game_role(guild_id):
         data = request.json
         
         # Aquí se actualizaría la base de datos
-        # await db.update_game_roles_config(guild_id, ...)
+        # db.update_game_roles_config(guild_id, ...)
         
         return jsonify({'success': True})
     

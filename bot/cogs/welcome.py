@@ -16,12 +16,12 @@ class Welcome(commands.Cog):
         """Enviar mensaje de bienvenida cuando un usuario se une"""
         try:
             # Verificar si el sistema de bienvenida está habilitado
-            guild_config = await db.get_guild_config(member.guild.id)
+            guild_config = db.get_guild_config(member.guild.id)
             if not guild_config or not guild_config.get('welcome_enabled', False):
                 return
             
             # Obtener configuración de bienvenida
-            welcome_config = await db.get_welcome_config(member.guild.id)
+            welcome_config = db.get_welcome_config(member.guild.id)
             if not welcome_config:
                 return
             
@@ -83,8 +83,8 @@ class Welcome(commands.Cog):
     async def set_welcome(self, interaction: discord.Interaction, canal: discord.TextChannel):
         """Configurar canal de bienvenida"""
         try:
-            await db.update_welcome_config(interaction.guild.id, channel_id=str(canal.id))
-            await db.update_guild_config(interaction.guild.id, welcome_enabled=True)
+            db.update_welcome_config(interaction.guild.id, channel_id=str(canal.id))
+            db.update_guild_config(interaction.guild.id, welcome_enabled=True)
             await interaction.response.send_message(f"✅ Canal de bienvenida configurado en {canal.mention}", ephemeral=True)
         except Exception as e:
             logger.error(f"Error setting welcome channel: {e}")
@@ -95,7 +95,7 @@ class Welcome(commands.Cog):
     async def welcome_message(self, interaction: discord.Interaction, mensaje: str):
         """Configurar mensaje de bienvenida"""
         try:
-            await db.update_welcome_config(interaction.guild.id, message=mensaje)
+            db.update_welcome_config(interaction.guild.id, message=mensaje)
             
             embed = discord.Embed(
                 title="✅ Mensaje de bienvenida actualizado",

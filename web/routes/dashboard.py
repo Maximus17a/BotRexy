@@ -50,9 +50,9 @@ def get_server_config(guild_id):
             return jsonify({'error': 'Unauthorized'}), 403
         
         # Obtener configuraciones
-        guild_config = await db.get_guild_config(int(guild_id))
-        automod_config = await db.get_automod_config(int(guild_id))
-        welcome_config = await db.get_welcome_config(int(guild_id))
+        guild_config = db.get_guild_config(int(guild_id))
+        automod_config = db.get_automod_config(int(guild_id))
+        welcome_config = db.get_welcome_config(int(guild_id))
         
         return jsonify({
             'guild': guild_config,
@@ -79,11 +79,11 @@ def update_server_config(guild_id):
         config_type = data.get('type')
         
         if config_type == 'guild':
-            await db.update_guild_config(int(guild_id), **data.get('config', {}))
+            db.update_guild_config(int(guild_id), **data.get('config', {}))
         elif config_type == 'automod':
-            await db.update_automod_config(int(guild_id), **data.get('config', {}))
+            db.update_automod_config(int(guild_id), **data.get('config', {}))
         elif config_type == 'welcome':
-            await db.update_welcome_config(int(guild_id), **data.get('config', {}))
+            db.update_welcome_config(int(guild_id), **data.get('config', {}))
         else:
             return jsonify({'error': 'Invalid config type'}), 400
         
@@ -103,7 +103,7 @@ def get_leaderboard(guild_id):
             return jsonify({'error': 'Unauthorized'}), 403
         
         limit = request.args.get('limit', 10, type=int)
-        leaderboard = await db.get_leaderboard(int(guild_id), limit)
+        leaderboard = db.get_leaderboard(int(guild_id), limit)
         
         return jsonify(leaderboard)
     except Exception as e:
@@ -121,7 +121,7 @@ def get_modlogs(guild_id):
             return jsonify({'error': 'Unauthorized'}), 403
         
         limit = request.args.get('limit', 50, type=int)
-        logs = await db.get_moderation_logs(int(guild_id), limit)
+        logs = db.get_moderation_logs(int(guild_id), limit)
         
         return jsonify(logs)
     except Exception as e:

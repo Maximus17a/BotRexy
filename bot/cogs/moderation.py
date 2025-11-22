@@ -32,7 +32,7 @@ class Moderation(commands.Cog):
             await interaction.response.send_message(embed=embed)
             
             # Registrar en logs
-            await db.log_moderation(
+            db.log_moderation(
                 interaction.guild.id,
                 usuario.id,
                 interaction.user.id,
@@ -65,7 +65,7 @@ class Moderation(commands.Cog):
             await interaction.response.send_message(embed=embed)
             
             # Registrar en logs
-            await db.log_moderation(
+            db.log_moderation(
                 interaction.guild.id,
                 usuario.id,
                 interaction.user.id,
@@ -94,7 +94,7 @@ class Moderation(commands.Cog):
             await interaction.response.send_message(embed=embed)
             
             # Registrar en logs
-            await db.log_moderation(
+            db.log_moderation(
                 interaction.guild.id,
                 user.id,
                 interaction.user.id,
@@ -131,7 +131,7 @@ class Moderation(commands.Cog):
             await interaction.response.send_message(embed=embed)
             
             # Registrar en logs
-            await db.log_moderation(
+            db.log_moderation(
                 interaction.guild.id,
                 usuario.id,
                 interaction.user.id,
@@ -159,7 +159,7 @@ class Moderation(commands.Cog):
             await interaction.response.send_message(embed=embed)
             
             # Registrar en logs
-            await db.log_moderation(
+            db.log_moderation(
                 interaction.guild.id,
                 usuario.id,
                 interaction.user.id,
@@ -186,7 +186,7 @@ class Moderation(commands.Cog):
             await interaction.followup.send(f"✅ Se eliminaron {len(deleted)} mensajes.", ephemeral=True)
             
             # Registrar en logs
-            await db.log_moderation(
+            db.log_moderation(
                 interaction.guild.id,
                 interaction.user.id,
                 interaction.user.id,
@@ -225,7 +225,7 @@ class Moderation(commands.Cog):
                 pass
             
             # Registrar en logs
-            await db.log_moderation(
+            db.log_moderation(
                 interaction.guild.id,
                 usuario.id,
                 interaction.user.id,
@@ -245,7 +245,7 @@ class Moderation(commands.Cog):
                 await interaction.response.send_message("❌ El límite debe estar entre 1 y 50.", ephemeral=True)
                 return
             
-            logs = await db.get_moderation_logs(interaction.guild.id, limite)
+            logs = db.get_moderation_logs(interaction.guild.id, limite)
             
             if not logs:
                 await interaction.response.send_message("No hay logs de moderación.", ephemeral=True)

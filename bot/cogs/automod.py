@@ -27,12 +27,12 @@ class AutoMod(commands.Cog):
             return
         
         # Verificar si automod está habilitado
-        guild_config = await db.get_guild_config(message.guild.id)
+        guild_config = db.get_guild_config(message.guild.id)
         if not guild_config or not guild_config.get('automod_enabled', True):
             return
         
         # Obtener configuración de automod
-        automod_config = await db.get_automod_config(message.guild.id)
+        automod_config = db.get_automod_config(message.guild.id)
         if not automod_config:
             return
         
@@ -114,7 +114,7 @@ class AutoMod(commands.Cog):
             await warning_msg.delete(delay=5)
             
             # Registrar en logs
-            await db.log_moderation(
+            db.log_moderation(
                 message.guild.id,
                 message.author.id,
                 self.bot.user.id,
@@ -138,7 +138,7 @@ class AutoMod(commands.Cog):
             await message.channel.send(embed=embed)
             
             # Registrar en logs
-            await db.log_moderation(
+            db.log_moderation(
                 message.guild.id,
                 message.author.id,
                 self.bot.user.id,
@@ -152,7 +152,7 @@ class AutoMod(commands.Cog):
     @app_commands.checks.has_permissions(administrator=True)
     async def automod_config(self, interaction: discord.Interaction):
         """Mostrar configuración de automoderación"""
-        automod_config = await db.get_automod_config(interaction.guild.id)
+        automod_config = db.get_automod_config(interaction.guild.id)
         
         if not automod_config:
             await interaction.response.send_message("❌ Error al obtener configuración.", ephemeral=True)
@@ -201,10 +201,10 @@ class AutoMod(commands.Cog):
     @app_commands.checks.has_permissions(administrator=True)
     async def toggle_spam(self, interaction: discord.Interaction):
         """Activar/desactivar anti-spam"""
-        automod_config = await db.get_automod_config(interaction.guild.id)
+        automod_config = db.get_automod_config(interaction.guild.id)
         current = automod_config.get('anti_spam', True)
         
-        await db.update_automod_config(interaction.guild.id, anti_spam=not current)
+        db.update_automod_config(interaction.guild.id, anti_spam=not current)
         
         status = "desactivado" if current else "activado"
         await interaction.response.send_message(f"✅ Anti-spam {status}.", ephemeral=True)
@@ -213,10 +213,10 @@ class AutoMod(commands.Cog):
     @app_commands.checks.has_permissions(administrator=True)
     async def toggle_invites(self, interaction: discord.Interaction):
         """Activar/desactivar anti-invitaciones"""
-        automod_config = await db.get_automod_config(interaction.guild.id)
+        automod_config = db.get_automod_config(interaction.guild.id)
         current = automod_config.get('anti_invites', True)
         
-        await db.update_automod_config(interaction.guild.id, anti_invites=not current)
+        db.update_automod_config(interaction.guild.id, anti_invites=not current)
         
         status = "desactivado" if current else "activado"
         await interaction.response.send_message(f"✅ Anti-invitaciones {status}.", ephemeral=True)
@@ -225,10 +225,10 @@ class AutoMod(commands.Cog):
     @app_commands.checks.has_permissions(administrator=True)
     async def toggle_links(self, interaction: discord.Interaction):
         """Activar/desactivar anti-enlaces"""
-        automod_config = await db.get_automod_config(interaction.guild.id)
+        automod_config = db.get_automod_config(interaction.guild.id)
         current = automod_config.get('anti_links', False)
         
-        await db.update_automod_config(interaction.guild.id, anti_links=not current)
+        db.update_automod_config(interaction.guild.id, anti_links=not current)
         
         status = "desactivado" if current else "activado"
         await interaction.response.send_message(f"✅ Anti-enlaces {status}.", ephemeral=True)

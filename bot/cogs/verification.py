@@ -15,12 +15,12 @@ class Verification(commands.Cog):
         """Enviar mensaje de verificación cuando un usuario se une"""
         try:
             # Verificar si el sistema de verificación está habilitado
-            guild_config = await db.get_guild_config(member.guild.id)
+            guild_config = db.get_guild_config(member.guild.id)
             if not guild_config or not guild_config.get('verification_enabled', False):
                 return
             
             # Obtener configuración de verificación
-            verification_config = await db.get_verification_config(member.guild.id)
+            verification_config = db.get_verification_config(member.guild.id)
             if not verification_config:
                 return
             
@@ -65,13 +65,13 @@ class Verification(commands.Cog):
         """Configurar sistema de verificación"""
         try:
             # Actualizar configuración
-            await db.update_verification_config(
+            db.update_verification_config(
                 interaction.guild.id,
                 channel_id=str(canal.id),
                 verified_role_id=str(rol_verificado.id)
             )
             
-            await db.update_guild_config(interaction.guild.id, verification_enabled=True)
+            db.update_guild_config(interaction.guild.id, verification_enabled=True)
             
             embed = discord.Embed(
                 title="✅ Sistema de Verificación Configurado",
@@ -97,7 +97,7 @@ class Verification(commands.Cog):
     async def manual_verify(self, interaction: discord.Interaction, usuario: discord.Member):
         """Verificar manualmente a un usuario"""
         try:
-            verification_config = await db.get_verification_config(interaction.guild.id)
+            verification_config = db.get_verification_config(interaction.guild.id)
             
             if not verification_config or not verification_config.get('verified_role_id'):
                 await interaction.response.send_message("❌ Sistema de verificación no configurado.", ephemeral=True)
@@ -125,10 +125,10 @@ class Verification(commands.Cog):
     async def toggle_verification(self, interaction: discord.Interaction):
         """Activar/desactivar sistema de verificación"""
         try:
-            guild_config = await db.get_guild_config(interaction.guild.id)
+            guild_config = db.get_guild_config(interaction.guild.id)
             current = guild_config.get('verification_enabled', False)
             
-            await db.update_guild_config(interaction.guild.id, verification_enabled=not current)
+            db.update_guild_config(interaction.guild.id, verification_enabled=not current)
             
             status = "desactivado" if current else "activado"
             await interaction.response.send_message(f"✅ Sistema de verificación {status}.", ephemeral=True)
@@ -187,7 +187,7 @@ class VerificationView(discord.ui.View):
             await interaction.response.send_message(embed=embed, ephemeral=True)
             
             # Log de moderación
-            await db.log_moderation(
+            db.log_moderation(
                 interaction.guild.id,
                 interaction.user.id,
                 self.bot.user.id,

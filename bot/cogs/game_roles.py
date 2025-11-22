@@ -43,7 +43,7 @@ class GameRoles(commands.Cog):
             await interaction.response.defer(ephemeral=True)
             
             # Obtener configuración de roles de juegos
-            game_roles_config = await db.get_game_roles_config(interaction.guild.id)
+            game_roles_config = db.get_game_roles_config(interaction.guild.id)
             
             if not game_roles_config or not game_roles_config.get('roles'):
                 await interaction.followup.send(
@@ -92,7 +92,7 @@ class GameRoles(commands.Cog):
             message = await canal.send(embed=embed, view=view)
             
             # Guardar ID del mensaje
-            await db.update_game_roles_config(
+            db.update_game_roles_config(
                 interaction.guild.id,
                 channel_id=str(canal.id),
                 message_id=str(message.id)
@@ -118,7 +118,7 @@ class GameRoles(commands.Cog):
         """Agregar un rol de juego a la configuración"""
         try:
             # Obtener configuración actual
-            game_roles_config = await db.get_game_roles_config(interaction.guild.id)
+            game_roles_config = db.get_game_roles_config(interaction.guild.id)
             
             if not game_roles_config:
                 game_roles_config = {'roles': {}}
@@ -126,7 +126,7 @@ class GameRoles(commands.Cog):
             roles_data = game_roles_config.get('roles', {})
             roles_data[juego] = str(rol.id)
             
-            await db.update_game_roles_config(
+            db.update_game_roles_config(
                 interaction.guild.id,
                 roles=roles_data
             )
@@ -160,7 +160,7 @@ class GameRoles(commands.Cog):
     async def remove_game_role(self, interaction: discord.Interaction, juego: str):
         """Remover un rol de juego de la configuración"""
         try:
-            game_roles_config = await db.get_game_roles_config(interaction.guild.id)
+            game_roles_config = db.get_game_roles_config(interaction.guild.id)
             
             if not game_roles_config or not game_roles_config.get('roles'):
                 await interaction.response.send_message(
@@ -180,7 +180,7 @@ class GameRoles(commands.Cog):
             
             del roles_data[juego]
             
-            await db.update_game_roles_config(
+            db.update_game_roles_config(
                 interaction.guild.id,
                 roles=roles_data
             )
@@ -199,7 +199,7 @@ class GameRoles(commands.Cog):
     async def list_game_roles(self, interaction: discord.Interaction):
         """Listar roles de juegos configurados"""
         try:
-            game_roles_config = await db.get_game_roles_config(interaction.guild.id)
+            game_roles_config = db.get_game_roles_config(interaction.guild.id)
             
             if not game_roles_config or not game_roles_config.get('roles'):
                 await interaction.response.send_message(

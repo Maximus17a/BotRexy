@@ -42,7 +42,7 @@ def get_welcome_config(guild_id):
         if not any(g['id'] == guild_id for g in guilds):
             return jsonify({'error': 'Unauthorized'}), 403
         
-        config = await db.get_welcome_config(int(guild_id))
+        config = db.get_welcome_config(int(guild_id))
         
         return jsonify(config)
     except Exception as e:
@@ -62,7 +62,7 @@ def update_welcome_config(guild_id):
         data = request.json
         
         # Actualizar configuración
-        await db.update_welcome_config(int(guild_id), **data)
+        db.update_welcome_config(int(guild_id), **data)
         
         return jsonify({'success': True})
     except Exception as e:
@@ -87,7 +87,7 @@ def preview_welcome(guild_id):
         # Generar imagen de preview
         avatar_url = f"https://cdn.discordapp.com/avatars/{user['id']}/{user['avatar']}.png"
         
-        image_bytes = await image_generator.generate(
+        image_bytes = image_generator.generate(
             user_name=data.get('user_name', user['username']),
             user_avatar_url=avatar_url,
             server_name=guild['name'],

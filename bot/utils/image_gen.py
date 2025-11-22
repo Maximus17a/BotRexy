@@ -1,6 +1,6 @@
-from PIL import Image, ImageDraw, ImageFont, ImageFilter
+from PIL import Image, ImageDraw, ImageFont
 import io
-import aiohttp
+import requests
 import logging
 
 logger = logging.getLogger(__name__)
@@ -11,7 +11,7 @@ class WelcomeImageGenerator:
         self.height = 300
         self.avatar_size = 150
     
-    async def generate(self, user_name: str, user_avatar_url: str, server_name: str, 
+    def generate(self, user_name: str, user_avatar_url: str, server_name: str, 
                       bg_color: str = '#7289da', text_color: str = '#ffffff'):
         """Generar imagen de bienvenida"""
         try:
@@ -20,7 +20,7 @@ class WelcomeImageGenerator:
             draw = ImageDraw.Draw(img)
             
             # Descargar avatar del usuario
-            avatar = await self._download_avatar(user_avatar_url)
+            avatar = self._download_avatar(user_avatar_url)
             if avatar:
                 # Hacer el avatar circular
                 avatar = self._make_circular(avatar)
@@ -62,16 +62,14 @@ class WelcomeImageGenerator:
             logger.error(f"Error generating welcome image: {e}")
             return None
     
-    async def _download_avatar(self, url: str):
+    def _download_avatar(self, url: str):
         """Descargar avatar del usuario"""
         try:
-            async with aiohttp.ClientSession() as session:
-                async with session.get(url) as resp:
-                    if resp.status == 200:
-                        data = await resp.read()
-                        avatar = Image.open(io.BytesIO(data))
-                        avatar = avatar.resize((self.avatar_size, self.avatar_size))
-                        return avatar
+            response = requests.get(url, timeout=10)
+            if response.status_code == 200:
+                avatar = Image.open(io.BytesIO(response.content))
+                avatar = avatar.resize((self.avatar_size, self.avatar_size))
+                return avatar
         except Exception as e:
             logger.error(f"Error downloading avatar: {e}")
         return None
