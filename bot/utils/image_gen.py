@@ -13,7 +13,7 @@ class WelcomeImageGenerator:
     
     def generate(self, user_name: str, user_avatar_url: str, server_name: str, 
                       bg_color: str = '#7289da', text_color: str = '#ffffff',
-                      background_image_url: str = None):
+                      background_image_url: str = None, font_size: int = 40):
         """Generar imagen de bienvenida"""
         try:
             # Crear imagen base
@@ -41,8 +41,8 @@ class WelcomeImageGenerator:
             # Agregar texto
             try:
                 # Intentar usar fuente personalizada
-                title_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 40)
-                subtitle_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 25)
+                title_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", font_size)
+                subtitle_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", font_size - 15)
             except:
                 # Fallback a fuente por defecto
                 title_font = ImageFont.load_default()

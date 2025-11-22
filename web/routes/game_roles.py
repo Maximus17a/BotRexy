@@ -3,6 +3,7 @@ from bot.utils.database import db
 import logging
 import discord
 from bot import bot
+import asyncio
 
 logger = logging.getLogger(__name__)
 
@@ -182,7 +183,7 @@ def get_roles(guild_id):
 
 @bp.route('/api/<guild_id>/create-panel', methods=['POST'])
 @login_required
-def create_panel(guild_id):
+async def create_panel(guild_id):
     """Crear panel de roles en Discord"""
     try:
         # Verificar acceso
@@ -234,7 +235,7 @@ def create_panel(guild_id):
         if not channel:
             return jsonify({'error': 'Canal no encontrado'}), 404
 
-        message = channel.send(embed=embed, view=view)
+        message = await channel.send(embed=embed, view=view)
 
         # Actualizar message_id en la base de datos
         db.update_game_roles_config(int(guild_id), message_id=str(message.id))
