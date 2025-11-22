@@ -55,7 +55,15 @@ def get_welcome_config(guild_id):
         if not any(g['id'] == guild_id for g in guilds):
             return jsonify({'error': 'Unauthorized'}), 403
         
+        # Obtener configuración de welcome_config
         config = db.get_welcome_config(int(guild_id))
+        
+        # Obtener el estado de welcome_enabled desde guilds
+        guild_config = db.get_guild_config(int(guild_id))
+        if guild_config:
+            config['welcome_enabled'] = guild_config.get('welcome_enabled', False)
+        else:
+            config['welcome_enabled'] = False
         
         return jsonify(config)
     except Exception as e:
@@ -74,8 +82,15 @@ def update_welcome_config(guild_id):
         
         data = request.json
         
-        # Actualizar configuración
+        # Separar el campo welcome_enabled que va en guilds
+        welcome_enabled = data.pop('welcome_enabled', None)
+        
+        # Actualizar configuración de welcome_config
         db.update_welcome_config(int(guild_id), **data)
+        
+        # Actualizar welcome_enabled en guilds si se proporcionó
+        if welcome_enabled is not None:
+            db.update_guild_config(int(guild_id), welcome_enabled=welcome_enabled)
         
         return jsonify({'success': True})
     except Exception as e:
@@ -133,39 +148,8 @@ def get_channels(guild_id):
         if not any(g['id'] == guild_id for g in guilds):
             return jsonify({'error': 'Unauthorized'}), 403
         
-        # Intentar obtener canales desde Discord API
-        try:
-            import requests
-            access_token = session.get('discord_token')
-            
-            if access_token:
-                headers = {
-                    'Authorization': f'Bot {access_token}'
-                }
-                response = requests.get(
-                    f'https://discord.com/api/v10/guilds/{guild_id}/channels',
-                    headers=headers,
-                    timeout=5
-                )
-                
-                if response.status_code == 200:
-                    channels = response.json()
-                    # Filtrar solo canales de texto
-                    text_channels = [
-                        {
-                            'id': ch['id'],
-                            'name': ch['name'],
-                            'type': ch['type']
-                        }
-                        for ch in channels
-                        if ch['type'] in [0, 5]  # 0 = text, 5 = announcement
-                    ]
-                    return jsonify(text_channels)
-        except Exception as e:
-            logger.warning(f"Could not fetch channels from Discord: {e}")
-        
-        # Fallback: retornar lista vacía para que el usuario ingrese el ID manualmente
-        # o use el comando /setwelcome en Discord
+        # Por ahora retornar lista vacía para usar input manual
+        # Requiere que el bot esté corriendo y tenga comunicación con el backend
         return jsonify([])
         
     except Exception as e:

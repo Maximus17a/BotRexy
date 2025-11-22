@@ -258,7 +258,7 @@ async function loadConfig() {
         const response = await fetch(`/welcome/api/${guildId}/config`);
         const config = await response.json();
         
-        document.getElementById('welcomeEnabled').checked = config.enabled || false;
+        document.getElementById('welcomeEnabled').checked = config.welcome_enabled || false;
         document.getElementById('channelId').value = config.channel_id || '';
         document.getElementById('welcomeMessage').value = config.message || '¡Bienvenido {user} a {server}!';
         document.getElementById('imageEnabled').checked = config.image_enabled !== false;
@@ -309,7 +309,7 @@ document.getElementById('welcomeForm').addEventListener('submit', async (e) => {
     }
     
     const config = {
-        enabled: document.getElementById('welcomeEnabled').checked,
+        welcome_enabled: document.getElementById('welcomeEnabled').checked,
         channel_id: document.getElementById('channelId').value,
         message: document.getElementById('welcomeMessage').value,
         image_enabled: document.getElementById('imageEnabled').checked,

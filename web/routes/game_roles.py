@@ -144,38 +144,8 @@ def get_channels(guild_id):
         if not any(g['id'] == guild_id for g in guilds):
             return jsonify({'error': 'Unauthorized'}), 403
         
-        # Intentar obtener canales desde Discord API
-        try:
-            import requests
-            access_token = session.get('discord_token')
-            
-            if access_token:
-                headers = {
-                    'Authorization': f'Bot {access_token}'
-                }
-                response = requests.get(
-                    f'https://discord.com/api/v10/guilds/{guild_id}/channels',
-                    headers=headers,
-                    timeout=5
-                )
-                
-                if response.status_code == 200:
-                    channels = response.json()
-                    # Filtrar solo canales de texto
-                    text_channels = [
-                        {
-                            'id': ch['id'],
-                            'name': ch['name'],
-                            'type': ch['type']
-                        }
-                        for ch in channels
-                        if ch['type'] in [0, 5]  # 0 = text, 5 = announcement
-                    ]
-                    return jsonify(text_channels)
-        except Exception as e:
-            logger.warning(f"Could not fetch channels from Discord: {e}")
-        
-        # Fallback: retornar lista vacía
+        # Por ahora retornar lista vacía para usar input manual
+        # Requiere que el bot esté corriendo y tenga comunicación con el backend
         return jsonify([])
         
     except Exception as e:
@@ -192,38 +162,8 @@ def get_roles(guild_id):
         if not any(g['id'] == guild_id for g in guilds):
             return jsonify({'error': 'Unauthorized'}), 403
         
-        # Intentar obtener roles desde Discord API
-        try:
-            import requests
-            access_token = session.get('discord_token')
-            
-            if access_token:
-                headers = {
-                    'Authorization': f'Bot {access_token}'
-                }
-                response = requests.get(
-                    f'https://discord.com/api/v10/guilds/{guild_id}/roles',
-                    headers=headers,
-                    timeout=5
-                )
-                
-                if response.status_code == 200:
-                    roles = response.json()
-                    # Filtrar roles del bot y @everyone
-                    filtered_roles = [
-                        {
-                            'id': role['id'],
-                            'name': role['name'],
-                            'color': role['color']
-                        }
-                        for role in roles
-                        if role['name'] != '@everyone' and not role.get('managed', False)
-                    ]
-                    return jsonify(filtered_roles)
-        except Exception as e:
-            logger.warning(f"Could not fetch roles from Discord: {e}")
-        
-        # Fallback: retornar lista vacía
+        # Por ahora retornar lista vacía para usar input manual
+        # Requiere que el bot esté corriendo y tenga comunicación con el backend
         return jsonify([])
         
     except Exception as e:
