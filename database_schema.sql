@@ -5,10 +5,10 @@
 CREATE TABLE IF NOT EXISTS guilds (
     id BIGSERIAL PRIMARY KEY,
     guild_id TEXT UNIQUE NOT NULL,
-    prefix TEXT DEFAULT '!',
-    automod_enabled BOOLEAN DEFAULT TRUE,
-    levels_enabled BOOLEAN DEFAULT TRUE,
-    welcome_enabled BOOLEAN DEFAULT FALSE,
+    prefix TEXT DEFAULT '!',    automod_enabled BOOLEAN DEFAULT false,
+    levels_enabled BOOLEAN DEFAULT true,
+    welcome_enabled BOOLEAN DEFAULT false,
+    verification_enabled BOOLEAN DEFAULT false,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
@@ -92,9 +92,40 @@ CREATE TRIGGER update_welcome_config_updated_at BEFORE UPDATE ON welcome_config
 CREATE TRIGGER update_automod_config_updated_at BEFORE UPDATE ON automod_config
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
+-- Tabla de configuración de verificación
+CREATE TABLE IF NOT EXISTS verification_config (
+    id BIGSERIAL PRIMARY KEY,
+    guild_id TEXT UNIQUE NOT NULL,
+    channel_id TEXT,
+    verified_role_id TEXT,
+    message TEXT DEFAULT '¡Bienvenido! Por favor verifica que eres humano.',
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Tabla de configuración de roles de juegos
+CREATE TABLE IF NOT EXISTS game_roles_config (
+    id BIGSERIAL PRIMARY KEY,
+    guild_id TEXT UNIQUE NOT NULL,
+    channel_id TEXT,
+    message_id TEXT,
+    roles JSONB DEFAULT '{}'::jsonb,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Triggers para actualizar updated_at
+CREATE TRIGGER update_verification_config_updated_at BEFORE UPDATE ON verification_config
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+CREATE TRIGGER update_game_roles_config_updated_at BEFORE UPDATE ON game_roles_config
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
 -- Comentarios para documentación
 COMMENT ON TABLE guilds IS 'Configuración general de cada servidor de Discord';
 COMMENT ON TABLE users IS 'Datos de usuarios, niveles y experiencia por servidor';
 COMMENT ON TABLE welcome_config IS 'Configuración de mensajes de bienvenida por servidor';
 COMMENT ON TABLE automod_config IS 'Configuración de automoderación por servidor';
 COMMENT ON TABLE moderation_logs IS 'Registro de acciones de moderación';
+COMMENT ON TABLE verification_config IS 'Configuración del sistema de verificación por servidor';
+COMMENT ON TABLE game_roles_config IS 'Configuración de roles de juegos por servidor';

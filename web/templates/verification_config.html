@@ -1,0 +1,154 @@
+{% extends "base.html" %}
+
+{% block title %}Configuración de Verificación - {{ guild.name }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{{ url_for('dashboard.dashboard') }}">Dashboard</a></li>
+            <li class="breadcrumb-item"><a href="{{ url_for('dashboard.server_config', guild_id=guild.id) }}">{{ guild.name }}</a></li>
+            <li class="breadcrumb-item active">Verificación</li>
+        </ol>
+    </nav>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="bi bi-shield-check"></i> Sistema de Verificación</h5>
+                </div>
+                <div class="card-body">
+                    <form id="verificationForm">
+                        <div class="mb-3 form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="verificationEnabled" 
+                                   {% if config.verification_enabled %}checked{% endif %}>
+                            <label class="form-check-label" for="verificationEnabled">
+                                <strong>Activar Sistema de Verificación</strong>
+                            </label>
+                            <div class="form-text">
+                                Los nuevos miembros deberán verificarse antes de acceder al servidor
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="verificationChannel" class="form-label">
+                                <i class="bi bi-hash"></i> Canal de Verificación
+                            </label>
+                            <select class="form-select" id="verificationChannel" required>
+                                <option value="">Selecciona un canal...</option>
+                                {% for channel in channels %}
+                                <option value="{{ channel.id }}" 
+                                        {% if verification_config and verification_config.channel_id == channel.id|string %}selected{% endif %}>
+                                    #{{ channel.name }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                            <div class="form-text">
+                                Canal donde aparecerá el mensaje de verificación
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="verifiedRole" class="form-label">
+                                <i class="bi bi-person-badge"></i> Rol de Verificado
+                            </label>
+                            <select class="form-select" id="verifiedRole" required>
+                                <option value="">Selecciona un rol...</option>
+                                {% for role in roles %}
+                                <option value="{{ role.id }}" 
+                                        {% if verification_config and verification_config.verified_role_id == role.id|string %}selected{% endif %}>
+                                    {{ role.name }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                            <div class="form-text">
+                                Rol que se asignará automáticamente al verificarse
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="verificationMessage" class="form-label">
+                                <i class="bi bi-chat-text"></i> Mensaje de Verificación
+                            </label>
+                            <textarea class="form-control" id="verificationMessage" rows="3">{{ verification_config.message if verification_config else '¡Bienvenido! Por favor verifica que eres humano.' }}</textarea>
+                            <div class="form-text">
+                                Mensaje que verán los nuevos miembros
+                            </div>
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-save"></i> Guardar Configuración
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card shadow-sm mb-3">
+                <div class="card-header bg-info text-white">
+                    <h6 class="mb-0"><i class="bi bi-info-circle"></i> ¿Cómo funciona?</h6>
+                </div>
+                <div class="card-body">
+                    <ol class="mb-0">
+                        <li class="mb-2">Un nuevo miembro se une al servidor</li>
+                        <li class="mb-2">El bot envía un mensaje de verificación en el canal configurado</li>
+                        <li class="mb-2">El miembro hace clic en el botón "✅ Verificarme"</li>
+                        <li class="mb-0">Se le asigna automáticamente el rol de verificado</li>
+                    </ol>
+                </div>
+            </div>
+
+            <div class="card shadow-sm">
+                <div class="card-header bg-warning text-dark">
+                    <h6 class="mb-0"><i class="bi bi-lightbulb"></i> Consejos</h6>
+                </div>
+                <div class="card-body">
+                    <ul class="mb-0">
+                        <li class="mb-2">Crea un canal específico para verificación</li>
+                        <li class="mb-2">Configura los permisos para que solo los verificados puedan ver otros canales</li>
+                        <li class="mb-2">El rol de verificado debe estar por encima de otros roles en la jerarquía</li>
+                        <li class="mb-0">Los botones funcionan permanentemente (24/7)</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.getElementById('verificationForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const data = {
+        verification_enabled: document.getElementById('verificationEnabled').checked,
+        channel_id: document.getElementById('verificationChannel').value,
+        verified_role_id: document.getElementById('verifiedRole').value,
+        message: document.getElementById('verificationMessage').value
+    };
+    
+    try {
+        const response = await fetch(`/api/guilds/{{ guild.id }}/verification`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            showAlert('success', 'Configuración guardada correctamente');
+        } else {
+            showAlert('danger', 'Error al guardar: ' + result.error);
+        }
+    } catch (error) {
+        showAlert('danger', 'Error de conexión');
+    }
+});
+</script>
+{% endblock %}

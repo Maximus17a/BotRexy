@@ -7,6 +7,8 @@ Bot de Discord con automoderación, sistema de niveles, bienvenidas personalizab
 - **🛡️ Automoderación**: Anti-spam, filtro de palabras, límite de menciones y emojis
 - **🏆 Sistema de Niveles**: XP automático por mensajes y tabla de clasificación
 - **👋 Bienvenidas Personalizadas**: Mensajes e imágenes de bienvenida configurables
+- **🔐 Sistema de Verificación**: Verificación automática con rol para nuevos miembros
+- **🎮 Roles de Juegos**: Panel interactivo con botones para seleccionar roles de juegos
 - **🌐 Panel Web**: Interfaz web para configurar el bot sin comandos
 - **📊 Base de Datos**: Supabase para almacenamiento persistente
 - **📝 Logs de Moderación**: Registro completo de acciones de moderación
@@ -126,6 +128,17 @@ PORT=5000
 - `/togglelinks` - Activar/desactivar anti-enlaces
 - `/resetxp <usuario>` - Resetear XP de un usuario
 
+### Comandos de Verificación (Admin)
+- `/setupverification <canal> <rol>` - Configurar sistema de verificación
+- `/verify <usuario>` - Verificar manualmente a un usuario
+- `/toggleverification` - Activar/desactivar verificación
+
+### Comandos de Roles de Juegos (Admin)
+- `/setupgameroles <canal>` - Crear panel de roles de juegos
+- `/addgamerole <juego> <rol>` - Agregar rol de juego
+- `/removegamerole <juego>` - Remover rol de juego
+- `/listgameroles` - Ver roles configurados
+
 ## 🌐 Panel Web
 
 Accede al panel web en `https://tu-app.onrender.com`
@@ -134,6 +147,8 @@ Accede al panel web en `https://tu-app.onrender.com`
 - **Dashboard**: Ver todos tus servidores
 - **Configuración General**: Activar/desactivar sistemas
 - **Configuración de Bienvenida**: Personalizar mensajes e imágenes
+- **Sistema de Verificación**: Configurar canal y rol de verificación
+- **Roles de Juegos**: Crear panel interactivo con botones para roles
 - **Automoderación**: Configurar reglas de moderación
 - **Vista Previa**: Ver cómo se verán las imágenes de bienvenida
 
@@ -229,6 +244,8 @@ El bot y el servidor web se ejecutarán simultáneamente:
 - **users**: Datos de usuarios y niveles
 - **welcome_config**: Configuración de bienvenida
 - **automod_config**: Configuración de automoderación
+- **verification_config**: Configuración de verificación
+- **game_roles_config**: Configuración de roles de juegos
 - **moderation_logs**: Logs de moderación
 
 ### Inicializar Base de Datos

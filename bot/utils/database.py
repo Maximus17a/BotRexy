@@ -225,5 +225,79 @@ class Database:
             logger.error(f"Error getting moderation logs: {e}")
             return []
 
+    # Verification Configuration
+    async def get_verification_config(self, guild_id: int):
+        """Obtener configuración de verificación"""
+        try:
+            response = self.client.table('verification_config').select('*').eq('guild_id', str(guild_id)).execute()
+            if response.data:
+                return response.data[0]
+            else:
+                return await self.create_verification_config(guild_id)
+        except Exception as e:
+            logger.error(f"Error getting verification config: {e}")
+            return None
+    
+    async def create_verification_config(self, guild_id: int):
+        """Crear configuración de verificación por defecto"""
+        try:
+            data = {
+                'guild_id': str(guild_id),
+                'channel_id': None,
+                'verified_role_id': None,
+                'message': '¡Bienvenido! Por favor verifica que eres humano.'
+            }
+            response = self.client.table('verification_config').insert(data).execute()
+            return response.data[0] if response.data else None
+        except Exception as e:
+            logger.error(f"Error creating verification config: {e}")
+            return None
+    
+    async def update_verification_config(self, guild_id: int, **kwargs):
+        """Actualizar configuración de verificación"""
+        try:
+            response = self.client.table('verification_config').update(kwargs).eq('guild_id', str(guild_id)).execute()
+            return response.data[0] if response.data else None
+        except Exception as e:
+            logger.error(f"Error updating verification config: {e}")
+            return None
+    
+    # Game Roles Configuration
+    async def get_game_roles_config(self, guild_id: int):
+        """Obtener configuración de roles de juegos"""
+        try:
+            response = self.client.table('game_roles_config').select('*').eq('guild_id', str(guild_id)).execute()
+            if response.data:
+                return response.data[0]
+            else:
+                return await self.create_game_roles_config(guild_id)
+        except Exception as e:
+            logger.error(f"Error getting game roles config: {e}")
+            return None
+    
+    async def create_game_roles_config(self, guild_id: int):
+        """Crear configuración de roles de juegos por defecto"""
+        try:
+            data = {
+                'guild_id': str(guild_id),
+                'channel_id': None,
+                'message_id': None,
+                'roles': {}
+            }
+            response = self.client.table('game_roles_config').insert(data).execute()
+            return response.data[0] if response.data else None
+        except Exception as e:
+            logger.error(f"Error creating game roles config: {e}")
+            return None
+    
+    async def update_game_roles_config(self, guild_id: int, **kwargs):
+        """Actualizar configuración de roles de juegos"""
+        try:
+            response = self.client.table('game_roles_config').update(kwargs).eq('guild_id', str(guild_id)).execute()
+            return response.data[0] if response.data else None
+        except Exception as e:
+            logger.error(f"Error updating game roles config: {e}")
+            return None
+
 # Instancia global
 db = Database()

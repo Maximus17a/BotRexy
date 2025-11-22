@@ -23,12 +23,14 @@ CORS(app)
 
 # Importar rutas
 from web.routes import auth, dashboard, welcome_config, legal
+from web.routes.verification_routes import verification_bp
 
 # Registrar blueprints
 app.register_blueprint(auth.bp)
 app.register_blueprint(dashboard.bp)
 app.register_blueprint(welcome_config.bp)
 app.register_blueprint(legal.bp)
+app.register_blueprint(verification_bp)
 
 @app.route('/')
 def index():
