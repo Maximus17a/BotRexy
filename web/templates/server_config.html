@@ -1,0 +1,176 @@
+{% extends "base.html" %}
+
+{% block title %}Configuración - {{ guild.name }}{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <div class="d-flex align-items-center mb-4">
+        <a href="{{ url_for('dashboard.dashboard') }}" class="btn btn-outline-secondary me-3">
+            <i class="bi bi-arrow-left"></i> Volver
+        </a>
+        <h1 class="mb-0">
+            <i class="bi bi-gear"></i> Configuración - {{ guild.name }}
+        </h1>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <!-- General Settings -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="bi bi-sliders"></i> Configuración General</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label class="form-label">Sistema de Niveles</label>
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="levelsEnabled" checked>
+                            <label class="form-check-label" for="levelsEnabled">
+                                Activar sistema de niveles y XP
+                            </label>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Sistema de Bienvenida</label>
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="welcomeEnabled">
+                            <label class="form-check-label" for="welcomeEnabled">
+                                Activar mensajes de bienvenida
+                            </label>
+                        </div>
+                        <a href="{{ url_for('welcome.welcome_editor', guild_id=guild.id) }}" class="btn btn-sm btn-outline-primary mt-2">
+                            <i class="bi bi-hand-wave"></i> Configurar Bienvenida
+                        </a>
+                    </div>
+                    <button class="btn btn-primary" id="saveGeneral">
+                        <i class="bi bi-save"></i> Guardar Cambios
+                    </button>
+                </div>
+            </div>
+
+            <!-- Automod Settings -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-warning">
+                    <h5 class="mb-0"><i class="bi bi-shield-check"></i> Automoderación</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label class="form-label">Anti-Spam</label>
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="antiSpam" checked>
+                            <label class="form-check-label" for="antiSpam">
+                                Detectar y silenciar usuarios que envían spam
+                            </label>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Anti-Invitaciones</label>
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="antiInvites" checked>
+                            <label class="form-check-label" for="antiInvites">
+                                Eliminar invitaciones de otros servidores de Discord
+                            </label>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Anti-Enlaces</label>
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="antiLinks">
+                            <label class="form-check-label" for="antiLinks">
+                                Eliminar todos los enlaces (URLs)
+                            </label>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="maxMentions" class="form-label">Máximo de Menciones</label>
+                            <input type="number" class="form-control" id="maxMentions" value="5" min="1" max="20">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="maxEmojis" class="form-label">Máximo de Emojis</label>
+                            <input type="number" class="form-control" id="maxEmojis" value="10" min="1" max="50">
+                        </div>
+                    </div>
+                    <button class="btn btn-warning" id="saveAutomod">
+                        <i class="bi bi-save"></i> Guardar Cambios
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <!-- Quick Stats -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0"><i class="bi bi-graph-up"></i> Estadísticas</h5>
+                </div>
+                <div class="card-body">
+                    <p class="mb-2"><strong>Servidor:</strong> {{ guild.name }}</p>
+                    <p class="mb-2"><strong>ID:</strong> <code>{{ guild.id }}</code></p>
+                    <hr>
+                    <p class="text-muted small mb-0">
+                        Las estadísticas detalladas estarán disponibles próximamente.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Quick Links -->
+            <div class="card shadow-sm">
+                <div class="card-header bg-secondary text-white">
+                    <h5 class="mb-0"><i class="bi bi-link-45deg"></i> Enlaces Rápidos</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <a href="{{ url_for('welcome.welcome_editor', guild_id=guild.id) }}" class="btn btn-outline-primary">
+                            <i class="bi bi-hand-wave"></i> Configurar Bienvenida
+                        </a>
+                        <button class="btn btn-outline-info" id="viewLeaderboard">
+                            <i class="bi bi-trophy"></i> Ver Ranking
+                        </button>
+                        <button class="btn btn-outline-secondary" id="viewLogs">
+                            <i class="bi bi-journal-text"></i> Ver Logs
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const guildId = '{{ guild.id }}';
+
+// Save general settings
+document.getElementById('saveGeneral').addEventListener('click', async () => {
+    const config = {
+        type: 'guild',
+        config: {
+            levels_enabled: document.getElementById('levelsEnabled').checked,
+            welcome_enabled: document.getElementById('welcomeEnabled').checked
+        }
+    };
+    
+    // Implement save logic here
+    BotRexy.showToast('Configuración guardada', 'success');
+});
+
+// Save automod settings
+document.getElementById('saveAutomod').addEventListener('click', async () => {
+    const config = {
+        type: 'automod',
+        config: {
+            anti_spam: document.getElementById('antiSpam').checked,
+            anti_invites: document.getElementById('antiInvites').checked,
+            anti_links: document.getElementById('antiLinks').checked,
+            max_mentions: parseInt(document.getElementById('maxMentions').value),
+            max_emojis: parseInt(document.getElementById('maxEmojis').value)
+        }
+    };
+    
+    // Implement save logic here
+    BotRexy.showToast('Configuración de automoderación guardada', 'success');
+});
+</script>
+{% endblock %}

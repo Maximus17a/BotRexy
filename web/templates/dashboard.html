@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - BotRexy{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <h1 class="mb-4">
+        <i class="bi bi-speedometer2"></i> Dashboard
+    </h1>
+    
+    <div class="alert alert-info">
+        <i class="bi bi-info-circle"></i> Bienvenido, <strong>{{ user.username }}</strong>! 
+        Selecciona un servidor para configurar el bot.
+    </div>
+
+    {% if guilds %}
+    <div class="row g-4">
+        {% for guild in guilds %}
+        <div class="col-md-6 col-lg-4">
+            <div class="card h-100 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-3">
+                        {% if guild.icon %}
+                        <img src="https://cdn.discordapp.com/icons/{{ guild.id }}/{{ guild.icon }}.png" 
+                             alt="{{ guild.name }}" 
+                             class="rounded-circle me-3" 
+                             style="width: 50px; height: 50px;">
+                        {% else %}
+                        <div class="bg-primary text-white rounded-circle me-3 d-flex align-items-center justify-content-center" 
+                             style="width: 50px; height: 50px; font-size: 1.5rem;">
+                            {{ guild.name[0] }}
+                        </div>
+                        {% endif %}
+                        <h5 class="card-title mb-0">{{ guild.name }}</h5>
+                    </div>
+                    <div class="d-grid gap-2">
+                        <a href="{{ url_for('dashboard.server_config', guild_id=guild.id) }}" 
+                           class="btn btn-primary">
+                            <i class="bi bi-gear"></i> Configurar
+                        </a>
+                        <a href="{{ url_for('welcome.welcome_editor', guild_id=guild.id) }}" 
+                           class="btn btn-outline-primary">
+                            <i class="bi bi-hand-wave"></i> Configurar Bienvenida
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="alert alert-warning">
+        <i class="bi bi-exclamation-triangle"></i> No tienes servidores donde seas administrador o el bot no está en ninguno de tus servidores.
+        <hr>
+        <a href="{{ url_for('invite') }}" class="btn btn-primary" target="_blank">
+            <i class="bi bi-plus-circle"></i> Invitar Bot a tu Servidor
+        </a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

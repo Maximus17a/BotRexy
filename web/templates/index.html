@@ -1,0 +1,157 @@
+{% extends "base.html" %}
+
+{% block title %}BotRexy - Bot de Discord Completo{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="bg-primary text-white py-5">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-6">
+                <h1 class="display-4 fw-bold mb-4">
+                    <i class="bi bi-robot"></i> BotRexy
+                </h1>
+                <p class="lead mb-4">
+                    El bot de Discord completo con automoderación, sistema de niveles, 
+                    bienvenidas personalizables y panel de control web.
+                </p>
+                <div class="d-flex gap-3">
+                    <a href="{{ url_for('invite') }}" class="btn btn-light btn-lg" target="_blank">
+                        <i class="bi bi-plus-circle"></i> Invitar Bot
+                    </a>
+                    {% if not user %}
+                    <a href="{{ url_for('auth.login') }}" class="btn btn-outline-light btn-lg">
+                        <i class="bi bi-box-arrow-in-right"></i> Iniciar Sesión
+                    </a>
+                    {% else %}
+                    <a href="{{ url_for('dashboard.dashboard') }}" class="btn btn-outline-light btn-lg">
+                        <i class="bi bi-speedometer2"></i> Dashboard
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="col-lg-6 text-center">
+                <i class="bi bi-discord" style="font-size: 15rem; opacity: 0.2;"></i>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Features Section -->
+<section class="py-5">
+    <div class="container">
+        <h2 class="text-center mb-5">Características Principales</h2>
+        <div class="row g-4">
+            <div class="col-md-4">
+                <div class="card h-100 shadow-sm">
+                    <div class="card-body text-center">
+                        <i class="bi bi-shield-check text-primary" style="font-size: 3rem;"></i>
+                        <h5 class="card-title mt-3">Automoderación</h5>
+                        <p class="card-text">
+                            Protege tu servidor con anti-spam, filtro de palabras, 
+                            límite de menciones y más.
+                        </p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card h-100 shadow-sm">
+                    <div class="card-body text-center">
+                        <i class="bi bi-trophy text-warning" style="font-size: 3rem;"></i>
+                        <h5 class="card-title mt-3">Sistema de Niveles</h5>
+                        <p class="card-text">
+                            Recompensa la actividad de tus miembros con un sistema 
+                            de niveles y ranking automático.
+                        </p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card h-100 shadow-sm">
+                    <div class="card-body text-center">
+                        <i class="bi bi-hand-wave text-success" style="font-size: 3rem;"></i>
+                        <h5 class="card-title mt-3">Bienvenidas Personalizadas</h5>
+                        <p class="card-text">
+                            Crea mensajes de bienvenida únicos con imágenes 
+                            personalizables desde el panel web.
+                        </p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card h-100 shadow-sm">
+                    <div class="card-body text-center">
+                        <i class="bi bi-speedometer2 text-info" style="font-size: 3rem;"></i>
+                        <h5 class="card-title mt-3">Panel Web</h5>
+                        <p class="card-text">
+                            Configura todo desde un panel web intuitivo sin 
+                            necesidad de comandos complicados.
+                        </p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card h-100 shadow-sm">
+                    <div class="card-body text-center">
+                        <i class="bi bi-hammer text-danger" style="font-size: 3rem;"></i>
+                        <h5 class="card-title mt-3">Comandos de Moderación</h5>
+                        <p class="card-text">
+                            Kick, ban, timeout, warn y más comandos para 
+                            mantener el orden en tu servidor.
+                        </p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card h-100 shadow-sm">
+                    <div class="card-body text-center">
+                        <i class="bi bi-journal-text text-secondary" style="font-size: 3rem;"></i>
+                        <h5 class="card-title mt-3">Logs de Moderación</h5>
+                        <p class="card-text">
+                            Mantén un registro completo de todas las acciones 
+                            de moderación en tu servidor.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Commands Section -->
+<section class="bg-light py-5">
+    <div class="container">
+        <h2 class="text-center mb-5">Comandos Principales</h2>
+        <div class="row">
+            <div class="col-md-6">
+                <h4><i class="bi bi-chat-square-text"></i> Comandos de Usuario</h4>
+                <ul class="list-group">
+                    <li class="list-group-item"><code>/nivel</code> - Ver tu nivel y experiencia</li>
+                    <li class="list-group-item"><code>/ranking</code> - Ver la tabla de clasificación</li>
+                </ul>
+            </div>
+            <div class="col-md-6">
+                <h4><i class="bi bi-shield-lock"></i> Comandos de Moderación</h4>
+                <ul class="list-group">
+                    <li class="list-group-item"><code>/kick</code> - Expulsar usuario</li>
+                    <li class="list-group-item"><code>/ban</code> - Banear usuario</li>
+                    <li class="list-group-item"><code>/timeout</code> - Silenciar usuario</li>
+                    <li class="list-group-item"><code>/warn</code> - Advertir usuario</li>
+                    <li class="list-group-item"><code>/clear</code> - Eliminar mensajes</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- CTA Section -->
+<section class="bg-primary text-white py-5">
+    <div class="container text-center">
+        <h2 class="mb-4">¿Listo para mejorar tu servidor?</h2>
+        <p class="lead mb-4">Invita a BotRexy ahora y comienza a disfrutar de todas sus funcionalidades.</p>
+        <a href="{{ url_for('invite') }}" class="btn btn-light btn-lg" target="_blank">
+            <i class="bi bi-plus-circle"></i> Invitar Bot Ahora
+        </a>
+    </div>
+</section>
+{% endblock %}

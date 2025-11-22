@@ -1,0 +1,141 @@
+/* BotRexy Custom Styles */
+
+:root {
+    --primary-color: #5865F2;
+    --secondary-color: #57F287;
+    --danger-color: #ED4245;
+    --warning-color: #FEE75C;
+    --dark-bg: #2C2F33;
+    --light-bg: #F8F9FA;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+main {
+    flex: 1;
+}
+
+.navbar {
+    box-shadow: 0 2px 4px rgba(0,0,0,.1);
+}
+
+.navbar-brand {
+    font-weight: bold;
+    font-size: 1.5rem;
+}
+
+.card {
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 4px 12px rgba(0,0,0,.15);
+}
+
+.btn {
+    transition: all 0.2s;
+}
+
+.btn:hover {
+    transform: translateY(-2px);
+}
+
+footer {
+    margin-top: auto;
+}
+
+/* Hero section */
+.bg-primary {
+    background: linear-gradient(135deg, #5865F2 0%, #7289DA 100%) !important;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+    width: 10px;
+}
+
+::-webkit-scrollbar-track {
+    background: #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #555;
+}
+
+/* Loading animation */
+.loading {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    border: 3px solid rgba(255,255,255,.3);
+    border-radius: 50%;
+    border-top-color: #fff;
+    animation: spin 1s ease-in-out infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* Code blocks */
+code {
+    background-color: #f4f4f4;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-family: 'Courier New', monospace;
+}
+
+/* Alert improvements */
+.alert {
+    border-left: 4px solid;
+}
+
+.alert-info {
+    border-left-color: #5865F2;
+}
+
+.alert-success {
+    border-left-color: #57F287;
+}
+
+.alert-warning {
+    border-left-color: #FEE75C;
+}
+
+.alert-danger {
+    border-left-color: #ED4245;
+}
+
+/* Form improvements */
+.form-control:focus,
+.form-select:focus {
+    border-color: #5865F2;
+    box-shadow: 0 0 0 0.2rem rgba(88, 101, 242, 0.25);
+}
+
+/* Card header improvements */
+.card-header {
+    font-weight: 600;
+}
+
+/* Responsive improvements */
+@media (max-width: 768px) {
+    .navbar-brand {
+        font-size: 1.2rem;
+    }
+    
+    h1 {
+        font-size: 1.8rem;
+    }
+}

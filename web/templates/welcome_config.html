@@ -1,0 +1,221 @@
+{% extends "base.html" %}
+
+{% block title %}Configurar Bienvenida - {{ guild.name }}{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <div class="d-flex align-items-center mb-4">
+        <a href="{{ url_for('dashboard.dashboard') }}" class="btn btn-outline-secondary me-3">
+            <i class="bi bi-arrow-left"></i> Volver
+        </a>
+        <h1 class="mb-0">
+            <i class="bi bi-hand-wave"></i> Configurar Bienvenida - {{ guild.name }}
+        </h1>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="bi bi-gear"></i> Configuración</h5>
+                </div>
+                <div class="card-body">
+                    <form id="welcomeForm">
+                        <div class="mb-3">
+                            <label for="welcomeEnabled" class="form-label">Estado</label>
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="welcomeEnabled" checked>
+                                <label class="form-check-label" for="welcomeEnabled">
+                                    Activar mensajes de bienvenida
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="channelId" class="form-label">Canal de Bienvenida</label>
+                            <select class="form-select" id="channelId">
+                                <option value="">Selecciona un canal</option>
+                            </select>
+                            <div class="form-text">
+                                Selecciona el canal donde se enviarán los mensajes de bienvenida.
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="welcomeMessage" class="form-label">Mensaje de Bienvenida</label>
+                            <textarea class="form-control" id="welcomeMessage" rows="3" 
+                                      placeholder="¡Bienvenido {user} a {server}!">¡Bienvenido {user} a {server}!</textarea>
+                            <div class="form-text">
+                                Variables disponibles: <code>{user}</code> <code>{server}</code> <code>{members}</code>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Imagen de Bienvenida</label>
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="imageEnabled" checked>
+                                <label class="form-check-label" for="imageEnabled">
+                                    Incluir imagen personalizada
+                                </label>
+                            </div>
+                        </div>
+
+                        <div id="imageSettings">
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="bgColor" class="form-label">Color de Fondo</label>
+                                    <input type="color" class="form-control form-control-color" 
+                                           id="bgColor" value="#7289da">
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="textColor" class="form-label">Color de Texto</label>
+                                    <input type="color" class="form-control form-control-color" 
+                                           id="textColor" value="#ffffff">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-save"></i> Guardar Cambios
+                            </button>
+                            <button type="button" class="btn btn-outline-secondary" id="previewBtn">
+                                <i class="bi bi-eye"></i> Vista Previa
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card shadow-sm">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0"><i class="bi bi-eye"></i> Vista Previa</h5>
+                </div>
+                <div class="card-body text-center" id="previewContainer">
+                    <p class="text-muted">Haz clic en "Vista Previa" para ver cómo se verá la imagen de bienvenida.</p>
+                    <img id="previewImage" src="" alt="Preview" class="img-fluid rounded" style="display: none;">
+                </div>
+            </div>
+
+            <div class="card shadow-sm mt-3">
+                <div class="card-header bg-secondary text-white">
+                    <h5 class="mb-0"><i class="bi bi-info-circle"></i> Ayuda</h5>
+                </div>
+                <div class="card-body">
+                    <h6>Variables de Mensaje:</h6>
+                    <ul class="small">
+                        <li><code>{user}</code> - Mención del usuario</li>
+                        <li><code>{server}</code> - Nombre del servidor</li>
+                        <li><code>{members}</code> - Cantidad de miembros</li>
+                    </ul>
+                    <hr>
+                    <h6>Personalización de Imagen:</h6>
+                    <p class="small mb-0">
+                        Puedes personalizar los colores de fondo y texto de la imagen de bienvenida 
+                        para que coincidan con el tema de tu servidor.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const guildId = '{{ guild.id }}';
+
+// Cargar configuración actual
+async function loadConfig() {
+    try {
+        const response = await fetch(`/welcome/api/${guildId}/config`);
+        const config = await response.json();
+        
+        document.getElementById('welcomeEnabled').checked = config.enabled || false;
+        document.getElementById('channelId').value = config.channel_id || '';
+        document.getElementById('welcomeMessage').value = config.message || '¡Bienvenido {user} a {server}!';
+        document.getElementById('imageEnabled').checked = config.image_enabled !== false;
+        document.getElementById('bgColor').value = config.image_background || '#7289da';
+        document.getElementById('textColor').value = config.image_text_color || '#ffffff';
+    } catch (error) {
+        console.error('Error loading config:', error);
+    }
+}
+
+// Guardar configuración
+document.getElementById('welcomeForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const config = {
+        enabled: document.getElementById('welcomeEnabled').checked,
+        channel_id: document.getElementById('channelId').value,
+        message: document.getElementById('welcomeMessage').value,
+        image_enabled: document.getElementById('imageEnabled').checked,
+        image_background: document.getElementById('bgColor').value,
+        image_text_color: document.getElementById('textColor').value
+    };
+    
+    try {
+        const response = await fetch(`/welcome/api/${guildId}/config`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(config)
+        });
+        
+        if (response.ok) {
+            alert('Configuración guardada correctamente');
+        } else {
+            alert('Error al guardar configuración');
+        }
+    } catch (error) {
+        console.error('Error saving config:', error);
+        alert('Error al guardar configuración');
+    }
+});
+
+// Vista previa
+document.getElementById('previewBtn').addEventListener('click', async () => {
+    const data = {
+        user_name: '{{ user.username }}',
+        bg_color: document.getElementById('bgColor').value,
+        text_color: document.getElementById('textColor').value
+    };
+    
+    try {
+        const response = await fetch(`/welcome/api/${guildId}/preview`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+        });
+        
+        if (response.ok) {
+            const blob = await response.blob();
+            const url = URL.createObjectURL(blob);
+            const img = document.getElementById('previewImage');
+            img.src = url;
+            img.style.display = 'block';
+            document.querySelector('#previewContainer p').style.display = 'none';
+        } else {
+            alert('Error al generar vista previa');
+        }
+    } catch (error) {
+        console.error('Error generating preview:', error);
+        alert('Error al generar vista previa');
+    }
+});
+
+// Toggle image settings
+document.getElementById('imageEnabled').addEventListener('change', (e) => {
+    document.getElementById('imageSettings').style.display = e.target.checked ? 'block' : 'none';
+});
+
+// Cargar configuración al iniciar
+loadConfig();
+</script>
+{% endblock %}

@@ -1,0 +1,27 @@
+services:
+  - type: web
+    name: botrexy
+    env: python
+    region: oregon
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: python run.py
+    envVars:
+      - key: DISCORD_TOKEN
+        sync: false
+      - key: DISCORD_CLIENT_ID
+        sync: false
+      - key: DISCORD_CLIENT_SECRET
+        sync: false
+      - key: SECRET_KEY
+        generateValue: true
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_KEY
+        sync: false
+      - key: REDIRECT_URI
+        value: https://botrexy.onrender.com/callback
+      - key: PORT
+        value: 5000
+      - key: PYTHON_VERSION
+        value: 3.11.0
