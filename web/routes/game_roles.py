@@ -1,6 +1,8 @@
 from flask import Blueprint, render_template, session, redirect, url_for, request, jsonify
 from bot.utils.database import db
 import logging
+import discord
+from bot import bot
 
 logger = logging.getLogger(__name__)
 
@@ -137,17 +139,21 @@ def remove_game_role(guild_id):
 @bp.route('/api/<guild_id>/channels', methods=['GET'])
 @login_required
 def get_channels(guild_id):
-    """Obtener canales del servidor"""
+    """Obtener canales del servidor desde Discord"""
     try:
         # Verificar acceso
         guilds = session.get('guilds', [])
         if not any(g['id'] == guild_id for g in guilds):
             return jsonify({'error': 'Unauthorized'}), 403
-        
-        # Por ahora retornar lista vacía para usar input manual
-        # Requiere que el bot esté corriendo y tenga comunicación con el backend
-        return jsonify([])
-        
+
+        # Obtener canales desde Discord
+        discord_channels = bot.get_guild_channels(guild_id)
+        channels = [
+            {'id': str(channel.id), 'name': channel.name}
+            for channel in discord_channels if channel.type == discord.ChannelType.text
+        ]
+
+        return jsonify(channels)
     except Exception as e:
         logger.error(f"Error getting channels: {e}")
         return jsonify({'error': 'Internal server error'}), 500
@@ -155,17 +161,21 @@ def get_channels(guild_id):
 @bp.route('/api/<guild_id>/roles', methods=['GET'])
 @login_required
 def get_roles(guild_id):
-    """Obtener roles del servidor"""
+    """Obtener roles del servidor desde Discord"""
     try:
         # Verificar acceso
         guilds = session.get('guilds', [])
         if not any(g['id'] == guild_id for g in guilds):
             return jsonify({'error': 'Unauthorized'}), 403
-        
-        # Por ahora retornar lista vacía para usar input manual
-        # Requiere que el bot esté corriendo y tenga comunicación con el backend
-        return jsonify([])
-        
+
+        # Obtener roles desde Discord
+        discord_roles = bot.get_guild_roles(guild_id)
+        roles = [
+            {'id': str(role.id), 'name': role.name}
+            for role in discord_roles if not role.managed
+        ]
+
+        return jsonify(roles)
     except Exception as e:
         logger.error(f"Error getting roles: {e}")
         return jsonify({'error': 'Internal server error'}), 500
@@ -179,14 +189,57 @@ def create_panel(guild_id):
         guilds = session.get('guilds', [])
         if not any(g['id'] == guild_id for g in guilds):
             return jsonify({'error': 'Unauthorized'}), 403
-        
-        # Esta funcionalidad requiere que el bot esté corriendo
-        # Por ahora retornar mensaje informativo
-        return jsonify({
-            'success': False,
-            'message': 'Para crear el panel, usa el comando /setupgameroles en Discord'
-        })
-        
+
+        # Obtener configuración actual
+        config = db.get_game_roles_config(int(guild_id))
+        if not config or not config.get('channel_id'):
+            return jsonify({'error': 'No hay canal configurado'}), 400
+
+        roles = config.get('roles', {})
+        if not roles:
+            return jsonify({'error': 'No hay roles configurados'}), 400
+
+        # Crear embed
+        embed = discord.Embed(
+            title="Selección de Roles",
+            description="Haz clic en los botones de abajo para obtener o remover roles de juegos y actividades.",
+            color=discord.Color.blue()
+        )
+        embed.add_field(
+            name="¿Cómo funciona?",
+            value="- Haz clic en un botón para agregar el rol\n- Si ya tienes el rol, haz clic nuevamente para quitarlo",
+            inline=False
+        )
+
+        for game_name, role_id in roles.items():
+            embed.add_field(
+                name=game_name,
+                value=f"<@&{role_id}>",
+                inline=True
+            )
+
+        # Crear botones
+        view = discord.ui.View()
+        for game_name, role_id in roles.items():
+            view.add_item(
+                discord.ui.Button(
+                    label=game_name,
+                    custom_id=f"role_{role_id}",
+                    style=discord.ButtonStyle.primary
+                )
+            )
+
+        # Enviar mensaje al canal
+        channel = bot.get_channel(int(config['channel_id']))
+        if not channel:
+            return jsonify({'error': 'Canal no encontrado'}), 404
+
+        message = channel.send(embed=embed, view=view)
+
+        # Actualizar message_id en la base de datos
+        db.update_game_roles_config(int(guild_id), message_id=str(message.id))
+
+        return jsonify({'success': True, 'message_id': message.id})
     except Exception as e:
         logger.error(f"Error creating panel: {e}")
         return jsonify({'error': 'Internal server error'}), 500

@@ -308,5 +308,25 @@ class Database:
             logger.error(f"Error updating game roles config: {e}")
             return None
 
+    def get_roles_config(self, guild_id: int):
+        """Obtener configuración de roles de juegos para un servidor"""
+        try:
+            response = self.client.table('game_roles_config').select('*').eq('guild_id', str(guild_id)).execute()
+            if response.data:
+                return response.data[0]
+            return None
+        except Exception as e:
+            logger.error(f"Error obteniendo configuración de roles: {e}")
+            return None
+
+    def update_roles_config(self, guild_id: int, roles: dict):
+        """Actualizar configuración de roles de juegos para un servidor"""
+        try:
+            response = self.client.table('game_roles_config').update({"roles": roles}).eq('guild_id', str(guild_id)).execute()
+            return response.data
+        except Exception as e:
+            logger.error(f"Error actualizando configuración de roles: {e}")
+            return None
+
 # Instancia global
 db = Database()

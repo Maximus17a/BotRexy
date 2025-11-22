@@ -231,6 +231,57 @@ class GameRoles(commands.Cog):
         except Exception as e:
             logger.error(f"Error listing game roles: {e}")
             await interaction.response.send_message("❌ Error al listar roles de juegos.", ephemeral=True)
+    
+    @app_commands.command(name="setuproles", description="Configurar roles interactivos en el canal")
+    @app_commands.checks.has_permissions(administrator=True)
+    async def setup_roles(self, interaction: discord.Interaction):
+        """Generar embed con roles configurados"""
+        await interaction.response.defer(ephemeral=True)
+
+        try:
+            # Recuperar roles desde la base de datos
+            roles_config = db.get_roles_config(interaction.guild.id)
+            if not roles_config:
+                await interaction.followup.send("❌ No hay roles configurados.", ephemeral=True)
+                return
+
+            # Crear embed
+            embed = discord.Embed(
+                title="Selección de Roles",
+                description="Haz clic en los botones de abajo para obtener o remover roles de juegos y actividades.",
+                color=discord.Color.blue()
+            )
+            embed.add_field(
+                name="¿Cómo funciona?",
+                value="- Haz clic en un botón para agregar el rol\n- Si ya tienes el rol, haz clic nuevamente para quitarlo",
+                inline=False
+            )
+
+            # Agregar roles al embed
+            for role in roles_config:
+                embed.add_field(
+                    name=role['name'],
+                    value=f"<@&{role['id']}>",
+                    inline=True
+                )
+
+            # Crear botones
+            view = discord.ui.View()
+            for role in roles_config:
+                view.add_item(
+                    discord.ui.Button(
+                        label=role['name'],
+                        custom_id=f"role_{role['id']}",
+                        style=discord.ButtonStyle.primary
+                    )
+                )
+
+            # Enviar mensaje al canal
+            await interaction.channel.send(embed=embed, view=view)
+            await interaction.followup.send("✅ Roles configurados correctamente.", ephemeral=True)
+        except Exception as e:
+            logger.error(f"Error configurando roles: {e}")
+            await interaction.followup.send("❌ Error al configurar roles.", ephemeral=True)
 
 
 class GameRolesView(discord.ui.View):
