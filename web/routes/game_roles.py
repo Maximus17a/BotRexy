@@ -148,10 +148,13 @@ def get_channels(guild_id):
             return jsonify({'error': 'Unauthorized'}), 403
 
         # Obtener canales desde Discord
-        discord_channels = bot.get_guild_channels(guild_id)
+        guild = bot.get_guild(int(guild_id))
+        if not guild:
+            return jsonify({'error': 'Guild not found'}), 404
+            
         channels = [
             {'id': str(channel.id), 'name': channel.name}
-            for channel in discord_channels if channel.type == discord.ChannelType.text
+            for channel in guild.channels if channel.type == discord.ChannelType.text
         ]
 
         return jsonify(channels)
@@ -170,10 +173,13 @@ def get_roles(guild_id):
             return jsonify({'error': 'Unauthorized'}), 403
 
         # Obtener roles desde Discord
-        discord_roles = bot.get_guild_roles(guild_id)
+        guild = bot.get_guild(int(guild_id))
+        if not guild:
+            return jsonify({'error': 'Guild not found'}), 404
+
         roles = [
             {'id': str(role.id), 'name': role.name}
-            for role in discord_roles if not role.managed
+            for role in guild.roles if not role.managed
         ]
 
         return jsonify(roles)
@@ -183,7 +189,7 @@ def get_roles(guild_id):
 
 @bp.route('/api/<guild_id>/create-panel', methods=['POST'])
 @login_required
-async def create_panel(guild_id):
+def create_panel(guild_id):
     """Crear panel de roles en Discord"""
     try:
         # Verificar acceso
@@ -235,7 +241,11 @@ async def create_panel(guild_id):
         if not channel:
             return jsonify({'error': 'Canal no encontrado'}), 404
 
-        message = await channel.send(embed=embed, view=view)
+        async def send_message():
+            return await channel.send(embed=embed, view=view)
+
+        future = asyncio.run_coroutine_threadsafe(send_message(), bot.loop)
+        message = future.result(timeout=10)
 
         # Actualizar message_id en la base de datos
         db.update_game_roles_config(int(guild_id), message_id=str(message.id))

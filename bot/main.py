@@ -39,7 +39,8 @@ class BotRexy(commands.Bot):
             'bot.cogs.moderation',
             'bot.cogs.levels',
             'bot.cogs.welcome',
-            'bot.cogs.automod'
+            'bot.cogs.automod',
+            'bot.cogs.game_roles'
         ]
         
         for cog in cogs:
@@ -93,13 +94,17 @@ class BotRexy(commands.Bot):
             )
         )
 
+# Instancia global del bot
+bot = BotRexy()
+
 async def main():
     """Función principal"""
     if not config.DISCORD_TOKEN:
         logger.error("DISCORD_TOKEN no está configurado en las variables de entorno")
         return
     
-    bot = BotRexy()
+    # Usar la instancia global
+    global bot
     
     try:
         await bot.start(config.DISCORD_TOKEN)
