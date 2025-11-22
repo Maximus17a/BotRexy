@@ -40,7 +40,11 @@
                         </a>
                         <a href="{{ url_for('welcome.welcome_editor', guild_id=guild.id) }}" 
                            class="btn btn-outline-primary">
-                            <i class="bi bi-hand-wave"></i> Configurar Bienvenida
+                            <i class="bi bi-hand-wave"></i> Bienvenida
+                        </a>
+                        <a href="{{ url_for('game_roles.game_roles_editor', guild_id=guild.id) }}" 
+                           class="btn btn-outline-success">
+                            <i class="bi bi-controller"></i> Roles de Juegos
                         </a>
                     </div>
                 </div>

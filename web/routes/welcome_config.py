@@ -126,18 +126,48 @@ def preview_welcome(guild_id):
 @bp.route('/api/<guild_id>/channels', methods=['GET'])
 @login_required
 def get_channels(guild_id):
-    """Obtener canales del servidor (simulado, requiere bot activo)"""
+    """Obtener canales del servidor"""
     try:
         # Verificar acceso
         guilds = session.get('guilds', [])
         if not any(g['id'] == guild_id for g in guilds):
             return jsonify({'error': 'Unauthorized'}), 403
         
-        # En producción, esto debería obtener los canales del bot
-        # Por ahora retornamos un placeholder
-        return jsonify([
-            {'id': '0', 'name': 'Selecciona un canal', 'type': 0}
-        ])
+        # Intentar obtener canales desde Discord API
+        try:
+            import requests
+            access_token = session.get('discord_token')
+            
+            if access_token:
+                headers = {
+                    'Authorization': f'Bot {access_token}'
+                }
+                response = requests.get(
+                    f'https://discord.com/api/v10/guilds/{guild_id}/channels',
+                    headers=headers,
+                    timeout=5
+                )
+                
+                if response.status_code == 200:
+                    channels = response.json()
+                    # Filtrar solo canales de texto
+                    text_channels = [
+                        {
+                            'id': ch['id'],
+                            'name': ch['name'],
+                            'type': ch['type']
+                        }
+                        for ch in channels
+                        if ch['type'] in [0, 5]  # 0 = text, 5 = announcement
+                    ]
+                    return jsonify(text_channels)
+        except Exception as e:
+            logger.warning(f"Could not fetch channels from Discord: {e}")
+        
+        # Fallback: retornar lista vacía para que el usuario ingrese el ID manualmente
+        # o use el comando /setwelcome en Discord
+        return jsonify([])
+        
     except Exception as e:
         logger.error(f"Error getting channels: {e}")
         return jsonify({'error': 'Internal server error'}), 500

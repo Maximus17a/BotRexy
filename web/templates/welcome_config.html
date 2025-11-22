@@ -34,10 +34,23 @@
                         <div class="mb-3">
                             <label for="channelId" class="form-label">Canal de Bienvenida</label>
                             <select class="form-select" id="channelId">
-                                <option value="">Selecciona un canal</option>
+                                <option value="">Cargando canales...</option>
                             </select>
-                            <div class="form-text">
+                            <div class="form-text" id="channelHelp">
                                 Selecciona el canal donde se enviarán los mensajes de bienvenida.
+                            </div>
+                            <div id="manualChannelInput" style="display: none;" class="mt-2">
+                                <label for="manualChannelId" class="form-label small">O ingresa el ID del canal manualmente:</label>
+                                <div class="input-group">
+                                    <input type="text" class="form-control" id="manualChannelId" 
+                                           placeholder="ID del canal (ej: 1234567890)">
+                                    <button class="btn btn-outline-secondary" type="button" id="useManualChannel">
+                                        <i class="bi bi-check"></i> Usar
+                                    </button>
+                                </div>
+                                <div class="form-text small">
+                                    Para obtener el ID: Discord → Configuración → Avanzado → Modo Desarrollador → Clic derecho en canal → Copiar ID
+                                </div>
                             </div>
                         </div>
 
@@ -143,6 +156,101 @@
 {% block extra_js %}
 <script>
 const guildId = '{{ guild.id }}';
+
+// Cargar canales del servidor
+async function loadChannels() {
+    try {
+        const response = await fetch(`/welcome/api/${guildId}/channels`);
+        const channels = await response.json();
+        
+        const select = document.getElementById('channelId');
+        
+        if (channels.length > 0) {
+            // Hay canales disponibles desde la API
+            select.innerHTML = '<option value="">Selecciona un canal</option>';
+            
+            channels.forEach(channel => {
+                if (channel.type === 0 || channel.type === 5) { // Text o announcement channels
+                    const option = document.createElement('option');
+                    option.value = channel.id;
+                    option.textContent = `# ${channel.name}`;
+                    select.appendChild(option);
+                }
+            });
+            
+            // Agregar opción manual al final
+            const manualOption = document.createElement('option');
+            manualOption.value = 'manual';
+            manualOption.textContent = '⚙️ Ingresar ID manualmente';
+            select.appendChild(manualOption);
+        } else {
+            // No hay canales, mostrar opción manual
+            select.innerHTML = '<option value="">No se pudieron cargar los canales</option>';
+            const manualOption = document.createElement('option');
+            manualOption.value = 'manual';
+            manualOption.textContent = '⚙️ Ingresar ID del canal';
+            manualOption.selected = true;
+            select.appendChild(manualOption);
+            document.getElementById('manualChannelInput').style.display = 'block';
+        }
+    } catch (error) {
+        console.error('Error loading channels:', error);
+        const select = document.getElementById('channelId');
+        select.innerHTML = '<option value="">Error al cargar canales</option>';
+        const manualOption = document.createElement('option');
+        manualOption.value = 'manual';
+        manualOption.textContent = '⚙️ Ingresar ID del canal';
+        manualOption.selected = true;
+        select.appendChild(manualOption);
+        document.getElementById('manualChannelInput').style.display = 'block';
+    }
+}
+
+// Manejar cambio de selección de canal
+document.addEventListener('DOMContentLoaded', () => {
+    const channelSelect = document.getElementById('channelId');
+    const manualInput = document.getElementById('manualChannelInput');
+    
+    channelSelect.addEventListener('change', (e) => {
+        if (e.target.value === 'manual') {
+            manualInput.style.display = 'block';
+        } else {
+            manualInput.style.display = 'none';
+        }
+    });
+    
+    // Botón para usar ID manual
+    document.getElementById('useManualChannel').addEventListener('click', () => {
+        const manualId = document.getElementById('manualChannelId').value.trim();
+        if (manualId && /^\d+$/.test(manualId)) {
+            const select = document.getElementById('channelId');
+            
+            // Verificar si ya existe
+            let existingOption = Array.from(select.options).find(opt => opt.value === manualId);
+            
+            if (!existingOption) {
+                // Crear nueva opción
+                const option = document.createElement('option');
+                option.value = manualId;
+                option.textContent = `# Canal (ID: ${manualId})`;
+                // Insertar antes de la opción "manual"
+                const manualOption = Array.from(select.options).find(opt => opt.value === 'manual');
+                if (manualOption) {
+                    select.insertBefore(option, manualOption);
+                } else {
+                    select.appendChild(option);
+                }
+            }
+            
+            // Seleccionar el canal
+            select.value = manualId;
+            manualInput.style.display = 'none';
+            document.getElementById('manualChannelId').value = '';
+        } else {
+            alert('Por favor ingresa un ID de canal válido (solo números)');
+        }
+    });
+});
 
 // Cargar configuración actual
 async function loadConfig() {
@@ -294,7 +402,8 @@ document.getElementById('removeBackgroundBtn').addEventListener('click', async (
     }
 });
 
-// Cargar configuración al iniciar
+// Cargar canales y configuración al iniciar
+loadChannels();
 loadConfig();
 </script>
 {% endblock %}

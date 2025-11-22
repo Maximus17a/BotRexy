@@ -3,101 +3,121 @@
 {% block title %}Roles de Juegos - {{ guild.name }}{% endblock %}
 
 {% block content %}
-<div class="container mt-4">
-    <nav aria-label="breadcrumb">
-        <ol class="breadcrumb">
-            <li class="breadcrumb-item"><a href="{{ url_for('dashboard.dashboard') }}">Dashboard</a></li>
-            <li class="breadcrumb-item"><a href="{{ url_for('dashboard.server_config', guild_id=guild.id) }}">{{ guild.name }}</a></li>
-            <li class="breadcrumb-item active">Roles de Juegos</li>
-        </ol>
-    </nav>
+<div class="container my-5">
+    <div class="d-flex align-items-center mb-4">
+        <a href="{{ url_for('dashboard.dashboard') }}" class="btn btn-outline-secondary me-3">
+            <i class="bi bi-arrow-left"></i> Volver
+        </a>
+        <h1 class="mb-0">
+            <i class="bi bi-controller"></i> Roles de Juegos - {{ guild.name }}
+        </h1>
+    </div>
 
     <div class="row">
         <div class="col-lg-8">
-            <div class="card shadow-sm mb-3">
+            <div class="card shadow-sm mb-4">
                 <div class="card-header bg-primary text-white">
-                    <h5 class="mb-0"><i class="bi bi-controller"></i> Configurar Roles de Juegos</h5>
+                    <h5 class="mb-0"><i class="bi bi-gear"></i> Configuración</h5>
                 </div>
                 <div class="card-body">
-                    <div class="mb-3">
-                        <label for="gameRolesChannel" class="form-label">
-                            <i class="bi bi-hash"></i> Canal para Panel de Roles
-                        </label>
-                        <select class="form-select" id="gameRolesChannel">
-                            <option value="">Selecciona un canal...</option>
-                            {% for channel in channels %}
-                            <option value="{{ channel.id }}" 
-                                    {% if game_roles_config and game_roles_config.channel_id == channel.id|string %}selected{% endif %}>
-                                #{{ channel.name }}
-                            </option>
-                            {% endfor %}
-                        </select>
-                        <div class="form-text">
-                            Canal donde se enviará el panel de selección de roles
-                        </div>
-                    </div>
-
-                    <h6 class="mt-4 mb-3">Roles Configurados</h6>
-                    <div id="gameRolesList">
-                        {% if game_roles_config and game_roles_config.roles %}
-                            {% for game_name, role_id in game_roles_config.roles.items() %}
-                            <div class="d-flex justify-content-between align-items-center mb-2 p-2 border rounded">
-                                <div>
-                                    <strong>{{ game_name }}</strong>
-                                    <span class="text-muted">→</span>
-                                    {% for role in roles %}
-                                        {% if role.id|string == role_id %}
-                                            <span class="badge" style="background-color: #{{ '%06x' % role.color }}">{{ role.name }}</span>
-                                        {% endif %}
-                                    {% endfor %}
-                                </div>
-                                <button class="btn btn-sm btn-danger" onclick="removeGameRole('{{ game_name }}')">
-                                    <i class="bi bi-trash"></i>
-                                </button>
+                    <form id="gameRolesForm">
+                        <div class="mb-3">
+                            <label for="channelId" class="form-label">Canal para Panel de Roles</label>
+                            <select class="form-select" id="channelId">
+                                <option value="">Cargando canales...</option>
+                            </select>
+                            <div class="form-text" id="channelHelp">
+                                Canal donde se enviará el panel de selección de roles
                             </div>
-                            {% endfor %}
-                        {% else %}
-                            <p class="text-muted">No hay roles configurados aún</p>
-                        {% endif %}
+                            <div id="manualChannelInput" style="display: none;" class="mt-2">
+                                <label for="manualChannelId" class="form-label small">O ingresa el ID del canal manualmente:</label>
+                                <div class="input-group">
+                                    <input type="text" class="form-control" id="manualChannelId" 
+                                           placeholder="ID del canal (ej: 1234567890)">
+                                    <button class="btn btn-outline-secondary" type="button" id="useManualChannel">
+                                        <i class="bi bi-check"></i> Usar
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-save"></i> Guardar Canal
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0"><i class="bi bi-joystick"></i> Roles Configurados</h5>
+                </div>
+                <div class="card-body">
+                    <div id="gameRolesList" class="mb-3">
+                        <p class="text-muted text-center py-3">Cargando roles...</p>
                     </div>
 
-                    <h6 class="mt-4 mb-3">Agregar Nuevo Rol</h6>
+                    <hr>
+
+                    <h6 class="mb-3">Agregar Nuevo Rol de Juego</h6>
                     <form id="addGameRoleForm">
                         <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label for="gameName" class="form-label">Nombre del Juego</label>
-                                <select class="form-select" id="gameName" required>
-                                    <option value="">Selecciona un juego...</option>
-                                    <option value="Rexys">🎮 Rexys</option>
-                                    <option value="Lolsito">🎯 Lolsito</option>
-                                    <option value="Pokemon">⚡ Pokemon</option>
-                                    <option value="Valorant">🔫 Valorant</option>
-                                    <option value="Fortnite">🏗️ Fortnite</option>
-                                    <option value="Marvel Rivals">⚔️ Marvel Rivals</option>
-                                    <option value="Battlefield">💣 Battlefield</option>
-                                    <option value="Palia">🌿 Palia</option>
-                                    <option value="League of Legends">🏆 League of Legends</option>
-                                </select>
+                                <input type="text" class="form-control" id="gameName" 
+                                       placeholder="Ej: Valorant, Minecraft, etc." required 
+                                       list="gamesList">
+                                <datalist id="gamesList">
+                                    <option value="Rexys">
+                                    <option value="Lolsito">
+                                    <option value="Pokemon">
+                                    <option value="Valorant">
+                                    <option value="Fortnite">
+                                    <option value="Marvel Rivals">
+                                    <option value="Battlefield">
+                                    <option value="Palia">
+                                    <option value="League of Legends">
+                                    <option value="Minecraft">
+                                    <option value="Counter-Strike">
+                                    <option value="Overwatch">
+                                    <option value="Apex Legends">
+                                </datalist>
                             </div>
                             <div class="col-md-6 mb-3">
                                 <label for="gameRole" class="form-label">Rol</label>
                                 <select class="form-select" id="gameRole" required>
-                                    <option value="">Selecciona un rol...</option>
-                                    {% for role in roles %}
-                                    <option value="{{ role.id }}">{{ role.name }}</option>
-                                    {% endfor %}
+                                    <option value="">Cargando roles...</option>
                                 </select>
+                            </div>
+                        </div>
+                        <div id="manualRoleInput" style="display: none;" class="mb-3">
+                            <label for="manualRoleId" class="form-label small">O ingresa el ID del rol manualmente:</label>
+                            <div class="input-group">
+                                <input type="text" class="form-control" id="manualRoleId" 
+                                       placeholder="ID del rol (ej: 1234567890)">
+                                <button class="btn btn-outline-secondary" type="button" id="useManualRole">
+                                    <i class="bi bi-check"></i> Usar
+                                </button>
                             </div>
                         </div>
                         <button type="submit" class="btn btn-success">
                             <i class="bi bi-plus-circle"></i> Agregar Rol
                         </button>
                     </form>
+                </div>
+            </div>
 
-                    <div class="d-grid gap-2 mt-4">
-                        <button class="btn btn-primary" onclick="createGameRolesPanel()">
-                            <i class="bi bi-send"></i> Crear/Actualizar Panel en Discord
-                        </button>
+            <div class="card shadow-sm">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0"><i class="bi bi-send"></i> Crear Panel en Discord</h5>
+                </div>
+                <div class="card-body">
+                    <p class="mb-3">Una vez configurados los roles y el canal, crea el panel interactivo en Discord.</p>
+                    <button class="btn btn-info w-100" id="createPanelBtn">
+                        <i class="bi bi-send-fill"></i> Crear/Actualizar Panel en Discord
+                    </button>
+                    <div class="form-text mt-2">
+                        O usa el comando <code>/setupgameroles</code> en Discord
                     </div>
                 </div>
             </div>
@@ -105,13 +125,13 @@
 
         <div class="col-lg-4">
             <div class="card shadow-sm mb-3">
-                <div class="card-header bg-info text-white">
+                <div class="card-header bg-secondary text-white">
                     <h6 class="mb-0"><i class="bi bi-info-circle"></i> ¿Cómo funciona?</h6>
                 </div>
                 <div class="card-body">
-                    <ol class="mb-0">
+                    <ol class="mb-0 small">
+                        <li class="mb-2">Selecciona un canal donde aparecerá el panel</li>
                         <li class="mb-2">Configura los roles para cada juego</li>
-                        <li class="mb-2">Selecciona un canal para el panel</li>
                         <li class="mb-2">Crea el panel en Discord</li>
                         <li class="mb-0">Los usuarios podrán seleccionar sus roles con botones</li>
                     </ol>
@@ -123,11 +143,11 @@
                     <h6 class="mb-0"><i class="bi bi-check-circle"></i> Características</h6>
                 </div>
                 <div class="card-body">
-                    <ul class="mb-0">
-                        <li class="mb-2">Botones permanentes (funcionan 24/7)</li>
-                        <li class="mb-2">Click para agregar, click de nuevo para remover</li>
-                        <li class="mb-2">Diseño colorido y atractivo</li>
-                        <li class="mb-0">Fácil de usar para los miembros</li>
+                    <ul class="mb-0 small">
+                        <li class="mb-2">✨ Botones permanentes (funcionan 24/7)</li>
+                        <li class="mb-2">🎯 Click para agregar, click de nuevo para remover</li>
+                        <li class="mb-2">🎨 Diseño colorido y atractivo</li>
+                        <li class="mb-0">👥 Fácil de usar para los miembros</li>
                     </ul>
                 </div>
             </div>
@@ -137,95 +157,282 @@
                     <h6 class="mb-0"><i class="bi bi-lightbulb"></i> Consejos</h6>
                 </div>
                 <div class="card-body">
-                    <ul class="mb-0">
-                        <li class="mb-2">Crea roles específicos para cada juego</li>
-                        <li class="mb-2">Usa colores diferentes para cada rol</li>
-                        <li class="mb-2">Coloca el panel en un canal visible</li>
-                        <li class="mb-0">Actualiza el panel cuando agregues nuevos juegos</li>
+                    <ul class="mb-0 small">
+                        <li class="mb-2">💡 Crea roles específicos para cada juego</li>
+                        <li class="mb-2">🎨 Usa colores diferentes para cada rol</li>
+                        <li class="mb-2">📍 Coloca el panel en un canal visible</li>
+                        <li class="mb-0">🔄 Actualiza el panel cuando agregues nuevos juegos</li>
                     </ul>
                 </div>
             </div>
         </div>
     </div>
 </div>
+{% endblock %}
 
+{% block extra_js %}
 <script>
-document.getElementById('addGameRoleForm').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    
-    const gameName = document.getElementById('gameName').value;
-    const roleId = document.getElementById('gameRole').value;
-    
-    try {
-        const response = await fetch(`/api/guilds/{{ guild.id }}/game-roles`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ game_name: gameName, role_id: roleId })
-        });
-        
-        const result = await response.json();
-        
-        if (result.success) {
-            showAlert('success', 'Rol agregado correctamente');
-            setTimeout(() => location.reload(), 1000);
-        } else {
-            showAlert('danger', 'Error al agregar: ' + result.error);
-        }
-    } catch (error) {
-        showAlert('danger', 'Error de conexión');
-    }
-});
+const guildId = '{{ guild.id }}';
 
-async function removeGameRole(gameName) {
-    if (!confirm(`¿Eliminar el rol de ${gameName}?`)) return;
-    
+// Cargar canales
+async function loadChannels() {
     try {
-        const response = await fetch(`/api/guilds/{{ guild.id }}/game-roles/${gameName}`, {
-            method: 'DELETE'
-        });
+        const response = await fetch(`/game-roles/api/${guildId}/channels`);
+        const channels = await response.json();
         
-        const result = await response.json();
+        const select = document.getElementById('channelId');
         
-        if (result.success) {
-            showAlert('success', 'Rol eliminado correctamente');
-            setTimeout(() => location.reload(), 1000);
+        if (channels.length > 0) {
+            select.innerHTML = '<option value="">Selecciona un canal</option>';
+            channels.forEach(channel => {
+                const option = document.createElement('option');
+                option.value = channel.id;
+                option.textContent = `# ${channel.name}`;
+                select.appendChild(option);
+            });
+            const manualOption = document.createElement('option');
+            manualOption.value = 'manual';
+            manualOption.textContent = '⚙️ Ingresar ID manualmente';
+            select.appendChild(manualOption);
         } else {
-            showAlert('danger', 'Error al eliminar: ' + result.error);
+            select.innerHTML = '<option value="">No se pudieron cargar canales</option>';
+            const manualOption = document.createElement('option');
+            manualOption.value = 'manual';
+            manualOption.textContent = '⚙️ Ingresar ID del canal';
+            manualOption.selected = true;
+            select.appendChild(manualOption);
+            document.getElementById('manualChannelInput').style.display = 'block';
         }
     } catch (error) {
-        showAlert('danger', 'Error de conexión');
+        console.error('Error loading channels:', error);
     }
 }
 
-async function createGameRolesPanel() {
-    const channelId = document.getElementById('gameRolesChannel').value;
+// Cargar roles
+async function loadRoles() {
+    try {
+        const response = await fetch(`/game-roles/api/${guildId}/roles`);
+        const roles = await response.json();
+        
+        const select = document.getElementById('gameRole');
+        
+        if (roles.length > 0) {
+            select.innerHTML = '<option value="">Selecciona un rol</option>';
+            roles.forEach(role => {
+                const option = document.createElement('option');
+                option.value = role.id;
+                option.textContent = role.name;
+                select.appendChild(option);
+            });
+            const manualOption = document.createElement('option');
+            manualOption.value = 'manual';
+            manualOption.textContent = '⚙️ Ingresar ID manualmente';
+            select.appendChild(manualOption);
+        } else {
+            select.innerHTML = '<option value="">No se pudieron cargar roles</option>';
+            const manualOption = document.createElement('option');
+            manualOption.value = 'manual';
+            manualOption.textContent = '⚙️ Ingresar ID del rol';
+            manualOption.selected = true;
+            select.appendChild(manualOption);
+            document.getElementById('manualRoleInput').style.display = 'block';
+        }
+    } catch (error) {
+        console.error('Error loading roles:', error);
+    }
+}
+
+// Cargar configuración
+async function loadConfig() {
+    try {
+        const response = await fetch(`/game-roles/api/${guildId}/config`);
+        const config = await response.json();
+        
+        if (config.channel_id) {
+            document.getElementById('channelId').value = config.channel_id;
+        }
+        
+        // Cargar lista de roles configurados
+        const rolesList = document.getElementById('gameRolesList');
+        const roles = config.roles || {};
+        
+        if (Object.keys(roles).length === 0) {
+            rolesList.innerHTML = '<p class="text-muted text-center py-3">No hay roles configurados aún</p>';
+        } else {
+            rolesList.innerHTML = '';
+            for (const [gameName, roleId] of Object.entries(roles)) {
+                const div = document.createElement('div');
+                div.className = 'd-flex justify-content-between align-items-center mb-2 p-3 border rounded';
+                div.innerHTML = `
+                    <div>
+                        <strong>🎮 ${gameName}</strong>
+                        <span class="text-muted mx-2">→</span>
+                        <span class="badge bg-secondary">Rol ID: ${roleId}</span>
+                    </div>
+                    <button class="btn btn-sm btn-danger" onclick="removeGameRole('${gameName}')">
+                        <i class="bi bi-trash"></i> Eliminar
+                    </button>
+                `;
+                rolesList.appendChild(div);
+            }
+        }
+    } catch (error) {
+        console.error('Error loading config:', error);
+    }
+}
+
+// Guardar canal
+document.getElementById('gameRolesForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
     
-    if (!channelId) {
-        showAlert('warning', 'Por favor selecciona un canal');
+    const channelId = document.getElementById('channelId').value;
+    
+    if (!channelId || channelId === 'manual') {
+        alert('Por favor selecciona un canal válido');
         return;
     }
     
     try {
-        const response = await fetch(`/api/guilds/{{ guild.id }}/game-roles/create-panel`, {
+        const response = await fetch(`/game-roles/api/${guildId}/config`, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ channel_id: channelId })
+        });
+        
+        if (response.ok) {
+            alert('Canal guardado correctamente');
+        } else {
+            alert('Error al guardar canal');
+        }
+    } catch (error) {
+        console.error('Error saving config:', error);
+        alert('Error al guardar configuración');
+    }
+});
+
+// Agregar rol de juego
+document.getElementById('addGameRoleForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const gameName = document.getElementById('gameName').value.trim();
+    let roleId = document.getElementById('gameRole').value;
+    
+    if (roleId === 'manual') {
+        roleId = document.getElementById('manualRoleId').value.trim();
+    }
+    
+    if (!gameName || !roleId) {
+        alert('Por favor completa todos los campos');
+        return;
+    }
+    
+    try {
+        const response = await fetch(`/game-roles/api/${guildId}/add-role`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ game_name: gameName, role_id: roleId })
+        });
+        
+        if (response.ok) {
+            alert('Rol agregado correctamente');
+            document.getElementById('gameName').value = '';
+            document.getElementById('gameRole').value = '';
+            document.getElementById('manualRoleId').value = '';
+            loadConfig();
+        } else {
+            alert('Error al agregar rol');
+        }
+    } catch (error) {
+        console.error('Error adding role:', error);
+        alert('Error al agregar rol');
+    }
+});
+
+// Eliminar rol de juego
+async function removeGameRole(gameName) {
+    if (!confirm(`¿Eliminar el rol de ${gameName}?`)) return;
+    
+    try {
+        const response = await fetch(`/game-roles/api/${guildId}/remove-role`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ game_name: gameName })
+        });
+        
+        if (response.ok) {
+            alert('Rol eliminado correctamente');
+            loadConfig();
+        } else {
+            alert('Error al eliminar rol');
+        }
+    } catch (error) {
+        console.error('Error removing role:', error);
+        alert('Error al eliminar rol');
+    }
+}
+
+// Crear panel
+document.getElementById('createPanelBtn').addEventListener('click', async () => {
+    try {
+        const response = await fetch(`/game-roles/api/${guildId}/create-panel`, {
+            method: 'POST'
         });
         
         const result = await response.json();
         
         if (result.success) {
-            showAlert('success', 'Panel creado correctamente en Discord');
+            alert('Panel creado correctamente en Discord');
         } else {
-            showAlert('danger', 'Error al crear panel: ' + result.error);
+            alert(result.message || 'Error al crear panel');
         }
     } catch (error) {
-        showAlert('danger', 'Error de conexión');
+        console.error('Error creating panel:', error);
+        alert('Error al crear panel');
     }
-}
+});
+
+// Manejar inputs manuales
+document.getElementById('channelId').addEventListener('change', (e) => {
+    document.getElementById('manualChannelInput').style.display = e.target.value === 'manual' ? 'block' : 'none';
+});
+
+document.getElementById('gameRole').addEventListener('change', (e) => {
+    document.getElementById('manualRoleInput').style.display = e.target.value === 'manual' ? 'block' : 'none';
+});
+
+document.getElementById('useManualChannel').addEventListener('click', () => {
+    const manualId = document.getElementById('manualChannelId').value.trim();
+    if (manualId && /^\d+$/.test(manualId)) {
+        const select = document.getElementById('channelId');
+        const option = document.createElement('option');
+        option.value = manualId;
+        option.textContent = `# Canal (ID: ${manualId})`;
+        option.selected = true;
+        select.insertBefore(option, select.firstChild);
+        document.getElementById('manualChannelInput').style.display = 'none';
+    } else {
+        alert('Por favor ingresa un ID válido (solo números)');
+    }
+});
+
+document.getElementById('useManualRole').addEventListener('click', () => {
+    const manualId = document.getElementById('manualRoleId').value.trim();
+    if (manualId && /^\d+$/.test(manualId)) {
+        const select = document.getElementById('gameRole');
+        const option = document.createElement('option');
+        option.value = manualId;
+        option.textContent = `Rol (ID: ${manualId})`;
+        option.selected = true;
+        select.insertBefore(option, select.firstChild);
+        document.getElementById('manualRoleInput').style.display = 'none';
+    } else {
+        alert('Por favor ingresa un ID válido (solo números)');
+    }
+});
+
+// Cargar todo al iniciar
+loadChannels();
+loadRoles();
+loadConfig();
 </script>
 {% endblock %}

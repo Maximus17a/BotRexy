@@ -24,12 +24,14 @@ CORS(app)
 # Importar rutas
 from web.routes import auth, dashboard, legal
 from web.routes.welcome_config import bp as welcome_bp
+from web.routes.game_roles import bp as game_roles_bp
 from web.routes.verification_routes import verification_bp
 
 # Registrar blueprints
 app.register_blueprint(auth.bp)
 app.register_blueprint(dashboard.bp)
 app.register_blueprint(welcome_bp)
+app.register_blueprint(game_roles_bp)
 app.register_blueprint(legal.bp)
 app.register_blueprint(verification_bp)
 
