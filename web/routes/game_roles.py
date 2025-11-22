@@ -225,27 +225,39 @@ def create_panel(guild_id):
                 inline=True
             )
 
-        # Crear botones
-        view = discord.ui.View()
-        for game_name, role_id in roles.items():
-            view.add_item(
-                discord.ui.Button(
-                    label=game_name,
-                    custom_id=f"role_{role_id}",
-                    style=discord.ButtonStyle.primary
-                )
-            )
-
         # Enviar mensaje al canal
-        channel = bot.get_channel(int(config['channel_id']))
-        if not channel:
-            return jsonify({'error': 'Canal no encontrado'}), 404
-
+        channel_id = int(config['channel_id'])
+        
         async def send_message():
+            channel = bot.get_channel(channel_id)
+            if not channel:
+                # Intentar fetch si no está en caché
+                try:
+                    channel = await bot.fetch_channel(channel_id)
+                except:
+                    return None
+            
+            if not channel:
+                return None
+
+            # Recrear view dentro del loop para evitar problemas de estado
+            view = discord.ui.View(timeout=None)
+            for game_name, role_id in roles.items():
+                view.add_item(
+                    discord.ui.Button(
+                        label=game_name,
+                        custom_id=f"game_role_{role_id}",
+                        style=discord.ButtonStyle.primary
+                    )
+                )
+            
             return await channel.send(embed=embed, view=view)
 
         future = asyncio.run_coroutine_threadsafe(send_message(), bot.loop)
         message = future.result(timeout=10)
+        
+        if not message:
+             return jsonify({'error': 'Canal no encontrado o error al enviar'}), 404
 
         # Actualizar message_id en la base de datos
         db.update_game_roles_config(int(guild_id), message_id=str(message.id))

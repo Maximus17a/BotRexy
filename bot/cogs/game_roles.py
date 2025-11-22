@@ -35,6 +35,53 @@ class GameRoles(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
     
+    @commands.Cog.listener()
+    async def on_interaction(self, interaction: discord.Interaction):
+        """Manejar interacciones de botones de roles"""
+        if not interaction.type == discord.InteractionType.component:
+            return
+        
+        custom_id = interaction.data.get('custom_id')
+        if not custom_id or not custom_id.startswith('game_role_'):
+            return
+        
+        try:
+            role_id = custom_id.replace('game_role_', '')
+            role = interaction.guild.get_role(int(role_id))
+            
+            if not role:
+                await interaction.response.send_message(
+                    "❌ Error: Rol no encontrado.",
+                    ephemeral=True
+                )
+                return
+            
+            # Verificar si el usuario ya tiene el rol
+            if role in interaction.user.roles:
+                # Remover rol
+                await interaction.user.remove_roles(role, reason="Rol de juego removido")
+                await interaction.response.send_message(
+                    f"❌ Se te ha removido el rol **{role.name}**",
+                    ephemeral=True
+                )
+            else:
+                # Agregar rol
+                await interaction.user.add_roles(role, reason="Rol de juego agregado")
+                await interaction.response.send_message(
+                    f"✅ ¡Ahora tienes el rol **{role.name}**!",
+                    ephemeral=True
+                )
+        
+        except Exception as e:
+            logger.error(f"Error in game role interaction: {e}")
+            try:
+                await interaction.response.send_message(
+                    "❌ Error al cambiar rol.",
+                    ephemeral=True
+                )
+            except:
+                pass
+
     @app_commands.command(name="setupgameroles", description="Configurar panel de roles de juegos (Admin)")
     @app_commands.checks.has_permissions(administrator=True)
     async def setup_game_roles(self, interaction: discord.Interaction, canal: discord.TextChannel):
