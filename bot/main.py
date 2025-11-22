@@ -40,7 +40,9 @@ class BotRexy(commands.Bot):
             'bot.cogs.levels',
             'bot.cogs.welcome',
             'bot.cogs.automod',
-            'bot.cogs.game_roles'
+            'bot.cogs.game_roles',
+            'bot.cogs.verification'
+            
         ]
         
         for cog in cogs:
