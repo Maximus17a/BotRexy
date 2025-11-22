@@ -53,6 +53,7 @@ Esta guía te llevará paso a paso a través del proceso completo de despliegue 
 3. Selecciona los siguientes **permisos**:
    - ✅ Administrator (o selecciona permisos específicos según necesites)
 4. **Copia la URL generada** (la usarás después para invitar el bot)
+https://discord.com/oauth2/authorize?client_id=1439403067488469143&permissions=8&integration_type=0&scope=bot+applications.commands
 
 ---
 
