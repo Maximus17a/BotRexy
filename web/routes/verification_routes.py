@@ -1,6 +1,9 @@
-from flask import Blueprint, render_template, request, jsonify, session
+from flask import Blueprint, render_template, request, jsonify, session, redirect, url_for
 import requests
 import logging
+from bot import bot
+import discord
+from bot.utils.database import db
 
 logger = logging.getLogger(__name__)
 
@@ -19,26 +22,37 @@ def verification_config(guild_id):
         
         # Verificar que el usuario es administrador del servidor
         user_guilds = requests.get('https://discord.com/api/users/@me/guilds', headers=headers).json()
-        guild = next((g for g in user_guilds if g['id'] == guild_id), None)
+        guild_data = next((g for g in user_guilds if g['id'] == guild_id), None)
         
-        if not guild or not (int(guild['permissions']) & 0x8):  # Administrator permission
+        if not guild_data or not (int(guild_data['permissions']) & 0x8):  # Administrator permission
             return "No tienes permisos de administrador en este servidor", 403
         
-        # Obtener canales y roles del servidor (esto requeriría el bot token)
-        # Por ahora usaremos datos de ejemplo
+        # Obtener canales y roles del servidor usando el bot
+        guild = bot.get_guild(int(guild_id))
         channels = []
         roles = []
         
-        # Obtener configuración actual (requiere conexión a base de datos)
-        config = {}
-        verification_config = {}
+        if guild:
+            channels = [
+                {'id': str(c.id), 'name': c.name} 
+                for c in guild.channels 
+                if isinstance(c, discord.TextChannel)
+            ]
+            roles = [
+                {'id': str(r.id), 'name': r.name} 
+                for r in guild.roles 
+                if not r.managed and r.name != "@everyone"
+            ]
+        
+        # Obtener configuración actual
+        verification_config = db.get_verification_config(int(guild_id))
         
         return render_template(
             'verification_config.html',
-            guild=guild,
+            guild=guild_data,
             channels=channels,
             roles=roles,
-            config=config,
+            config={}, # Placeholder for general config
             verification_config=verification_config
         )
     
@@ -95,8 +109,8 @@ def update_verification(guild_id):
         
         data = request.json
         
-        # Aquí se actualizaría la base de datos
-        # db.update_verification_config(guild_id, **data)
+        # Actualizar base de datos
+        db.update_verification_config(int(guild_id), **data)
         
         return jsonify({'success': True})
     

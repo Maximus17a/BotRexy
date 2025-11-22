@@ -56,6 +56,14 @@ class GameRoles(commands.Cog):
                 )
                 return
             
+            # Verificar jerarquía de roles
+            if role >= interaction.guild.me.top_role:
+                await interaction.response.send_message(
+                    "❌ Error: No puedo asignar este rol porque es igual o superior a mi rol más alto. Por favor pide a un administrador que suba mi rol.",
+                    ephemeral=True
+                )
+                return
+
             # Verificar si el usuario ya tiene el rol
             if role in interaction.user.roles:
                 # Remover rol
@@ -72,6 +80,11 @@ class GameRoles(commands.Cog):
                     ephemeral=True
                 )
         
+        except discord.Forbidden:
+            await interaction.response.send_message(
+                "❌ Error: No tengo permisos para gestionar roles. Verifica mi rol y permisos.",
+                ephemeral=True
+            )
         except Exception as e:
             logger.error(f"Error in game role interaction: {e}")
             try:

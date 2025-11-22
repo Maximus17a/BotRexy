@@ -1,6 +1,8 @@
 from flask import Blueprint, render_template, session, redirect, url_for, request, jsonify, send_file
 from bot.utils.database import db
 from bot.utils.image_gen import image_generator
+from bot import bot
+import discord
 import logging
 import io
 import os
@@ -141,17 +143,25 @@ def preview_welcome(guild_id):
 @bp.route('/api/<guild_id>/channels', methods=['GET'])
 @login_required
 def get_channels(guild_id):
-    """Obtener canales del servidor"""
+    """Obtener canales del servidor desde Discord"""
     try:
         # Verificar acceso
         guilds = session.get('guilds', [])
         if not any(g['id'] == guild_id for g in guilds):
             return jsonify({'error': 'Unauthorized'}), 403
-        
-        # Por ahora retornar lista vacía para usar input manual
-        # Requiere que el bot esté corriendo y tenga comunicación con el backend
-        return jsonify([])
-        
+
+        # Obtener canales desde Discord
+        guild = bot.get_guild(int(guild_id))
+        if not guild:
+            return jsonify({'error': 'Guild not found'}), 404
+            
+        channels = [
+            {'id': str(channel.id), 'name': channel.name, 'type': channel.type.value}
+            for channel in guild.channels 
+            if channel.type == discord.ChannelType.text or channel.type == discord.ChannelType.news
+        ]
+
+        return jsonify(channels)
     except Exception as e:
         logger.error(f"Error getting channels: {e}")
         return jsonify({'error': 'Internal server error'}), 500
