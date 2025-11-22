@@ -1,6 +1,6 @@
 # Discord Bot
 discord.py==2.3.2
-aiohttp==3.9.1
+aiohttp==3.10.11
 
 # Web Framework
 Flask==3.0.0
@@ -11,13 +11,10 @@ supabase==2.3.0
 postgrest==0.13.0
 
 # Image Processing
-Pillow==10.1.0
+Pillow==11.0.0
 
 # Environment Variables
 python-dotenv==1.0.0
 
 # HTTP Requests
 requests==2.31.0
-
-# Async Support
-asyncio==3.4.3
