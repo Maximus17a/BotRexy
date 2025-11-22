@@ -41,6 +41,10 @@ if __name__ == "__main__":
         logger.error("SUPABASE_URL o SUPABASE_KEY no están configurados. Por favor configura las variables de entorno.")
         sys.exit(1)
     
+    # Importar base de datos para evitar deadlocks en imports
+    # Se hace aquí para asegurar que las variables de entorno estén verificadas
+    from bot.utils.database import db
+
     logger.info("Starting BotRexy...")
     logger.info(f"Web server will run on port {config.WEB_PORT}")
     
