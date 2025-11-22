@@ -150,7 +150,8 @@ class Database:
                 'message': '¡Bienvenido {user} a {server}!',
                 'image_enabled': True,
                 'image_background': '#7289da',
-                'image_text_color': '#ffffff'
+                'image_text_color': '#ffffff',
+                'background_image_url': None
             }
             response = self.client.table('welcome_config').insert(data).execute()
             return response.data[0] if response.data else None

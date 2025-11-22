@@ -61,11 +61,28 @@
                         </div>
 
                         <div id="imageSettings">
+                            <div class="mb-3">
+                                <label for="backgroundImage" class="form-label">Imagen de Fondo</label>
+                                <input type="file" class="form-control" id="backgroundImage" 
+                                       accept="image/png,image/jpeg,image/jpg,image/gif,image/webp">
+                                <div class="form-text">
+                                    Sube una imagen personalizada para el fondo. Si no subes ninguna, se usará el color de fondo.
+                                </div>
+                                <div id="currentBackgroundPreview" class="mt-2" style="display: none;">
+                                    <p class="mb-1"><strong>Imagen actual:</strong></p>
+                                    <img id="currentBackgroundImg" src="" alt="Fondo actual" 
+                                         style="max-width: 200px; height: auto; border-radius: 5px;">
+                                    <button type="button" class="btn btn-sm btn-danger ms-2" id="removeBackgroundBtn">
+                                        <i class="bi bi-trash"></i> Eliminar
+                                    </button>
+                                </div>
+                            </div>
                             <div class="row">
                                 <div class="col-md-6 mb-3">
-                                    <label for="bgColor" class="form-label">Color de Fondo</label>
+                                    <label for="bgColor" class="form-label">Color de Fondo (alternativo)</label>
                                     <input type="color" class="form-control form-control-color" 
                                            id="bgColor" value="#7289da">
+                                    <div class="form-text">Se usa si no hay imagen de fondo</div>
                                 </div>
                                 <div class="col-md-6 mb-3">
                                     <label for="textColor" class="form-label">Color de Texto</label>
@@ -139,6 +156,15 @@ async function loadConfig() {
         document.getElementById('imageEnabled').checked = config.image_enabled !== false;
         document.getElementById('bgColor').value = config.image_background || '#7289da';
         document.getElementById('textColor').value = config.image_text_color || '#ffffff';
+        
+        // Mostrar imagen de fondo actual si existe
+        if (config.background_image_url) {
+            const preview = document.getElementById('currentBackgroundPreview');
+            const img = document.getElementById('currentBackgroundImg');
+            img.src = config.background_image_url;
+            preview.style.display = 'block';
+            window.currentBackgroundUrl = config.background_image_url;
+        }
     } catch (error) {
         console.error('Error loading config:', error);
     }
@@ -147,6 +173,32 @@ async function loadConfig() {
 // Guardar configuración
 document.getElementById('welcomeForm').addEventListener('submit', async (e) => {
     e.preventDefault();
+    
+    // Primero subir imagen si hay una nueva
+    const fileInput = document.getElementById('backgroundImage');
+    if (fileInput.files.length > 0) {
+        const formData = new FormData();
+        formData.append('background_image', fileInput.files[0]);
+        
+        try {
+            const uploadResponse = await fetch(`/welcome/api/${guildId}/upload-background`, {
+                method: 'POST',
+                body: formData
+            });
+            
+            if (uploadResponse.ok) {
+                const result = await uploadResponse.json();
+                window.currentBackgroundUrl = result.image_url;
+            } else {
+                alert('Error al subir la imagen de fondo');
+                return;
+            }
+        } catch (error) {
+            console.error('Error uploading background:', error);
+            alert('Error al subir la imagen de fondo');
+            return;
+        }
+    }
     
     const config = {
         enabled: document.getElementById('welcomeEnabled').checked,
@@ -168,6 +220,7 @@ document.getElementById('welcomeForm').addEventListener('submit', async (e) => {
         
         if (response.ok) {
             alert('Configuración guardada correctamente');
+            loadConfig(); // Recargar para mostrar la nueva imagen
         } else {
             alert('Error al guardar configuración');
         }
@@ -182,7 +235,8 @@ document.getElementById('previewBtn').addEventListener('click', async () => {
     const data = {
         user_name: '{{ user.username }}',
         bg_color: document.getElementById('bgColor').value,
-        text_color: document.getElementById('textColor').value
+        text_color: document.getElementById('textColor').value,
+        background_image_url: window.currentBackgroundUrl || null
     };
     
     try {
@@ -213,6 +267,31 @@ document.getElementById('previewBtn').addEventListener('click', async () => {
 // Toggle image settings
 document.getElementById('imageEnabled').addEventListener('change', (e) => {
     document.getElementById('imageSettings').style.display = e.target.checked ? 'block' : 'none';
+});
+
+// Eliminar imagen de fondo
+document.getElementById('removeBackgroundBtn').addEventListener('click', async () => {
+    if (!confirm('¿Estás seguro de que quieres eliminar la imagen de fondo?')) {
+        return;
+    }
+    
+    try {
+        const response = await fetch(`/welcome/api/${guildId}/remove-background`, {
+            method: 'POST'
+        });
+        
+        if (response.ok) {
+            window.currentBackgroundUrl = null;
+            document.getElementById('currentBackgroundPreview').style.display = 'none';
+            document.getElementById('backgroundImage').value = '';
+            alert('Imagen de fondo eliminada correctamente');
+        } else {
+            alert('Error al eliminar la imagen de fondo');
+        }
+    } catch (error) {
+        console.error('Error removing background:', error);
+        alert('Error al eliminar la imagen de fondo');
+    }
 });
 
 // Cargar configuración al iniciar

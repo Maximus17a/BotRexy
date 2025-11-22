@@ -12,11 +12,20 @@ class WelcomeImageGenerator:
         self.avatar_size = 150
     
     def generate(self, user_name: str, user_avatar_url: str, server_name: str, 
-                      bg_color: str = '#7289da', text_color: str = '#ffffff'):
+                      bg_color: str = '#7289da', text_color: str = '#ffffff',
+                      background_image_url: str = None):
         """Generar imagen de bienvenida"""
         try:
             # Crear imagen base
-            img = Image.new('RGB', (self.width, self.height), bg_color)
+            if background_image_url:
+                # Usar imagen de fondo personalizada
+                img = self._download_background(background_image_url)
+                if not img:
+                    # Fallback a color sólido si falla la descarga
+                    img = Image.new('RGB', (self.width, self.height), bg_color)
+            else:
+                # Usar color sólido
+                img = Image.new('RGB', (self.width, self.height), bg_color)
             draw = ImageDraw.Draw(img)
             
             # Descargar avatar del usuario
@@ -72,6 +81,22 @@ class WelcomeImageGenerator:
                 return avatar
         except Exception as e:
             logger.error(f"Error downloading avatar: {e}")
+        return None
+    
+    def _download_background(self, url: str):
+        """Descargar y preparar imagen de fondo"""
+        try:
+            response = requests.get(url, timeout=10)
+            if response.status_code == 200:
+                bg = Image.open(io.BytesIO(response.content))
+                # Convertir a RGB si es necesario
+                if bg.mode != 'RGB':
+                    bg = bg.convert('RGB')
+                # Redimensionar para cubrir el tamaño de la imagen
+                bg = bg.resize((self.width, self.height), Image.Resampling.LANCZOS)
+                return bg
+        except Exception as e:
+            logger.error(f"Error downloading background: {e}")
         return None
     
     def _make_circular(self, img):

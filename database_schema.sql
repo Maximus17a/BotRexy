@@ -35,6 +35,7 @@ CREATE TABLE IF NOT EXISTS welcome_config (
     image_enabled BOOLEAN DEFAULT TRUE,
     image_background TEXT DEFAULT '#7289da',
     image_text_color TEXT DEFAULT '#ffffff',
+    background_image_url TEXT,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );

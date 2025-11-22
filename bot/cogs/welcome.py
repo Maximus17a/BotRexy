@@ -48,13 +48,15 @@ class Welcome(commands.Cog):
                     avatar_url = member.display_avatar.url
                     bg_color = welcome_config.get('image_background', '#7289da')
                     text_color = welcome_config.get('image_text_color', '#ffffff')
+                    background_image_url = welcome_config.get('background_image_url')
                     
                     image_bytes = await image_generator.generate(
                         user_name=member.display_name,
                         user_avatar_url=avatar_url,
                         server_name=member.guild.name,
                         bg_color=bg_color,
-                        text_color=text_color
+                        text_color=text_color,
+                        background_image_url=background_image_url
                     )
                     
                     if image_bytes:

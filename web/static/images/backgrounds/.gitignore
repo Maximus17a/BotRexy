@@ -1,0 +1,4 @@
+# Mantener este directorio en el repositorio pero ignorar las imágenes subidas
+*
+!.gitignore
+!.gitkeep
