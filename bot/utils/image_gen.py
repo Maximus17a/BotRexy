@@ -1,144 +1,144 @@
-from PIL import Image, ImageDraw, ImageFont
+from PIL import Image, ImageDraw, ImageFont, ImageOps
 import io
 import requests
 import logging
+import os
 
 logger = logging.getLogger(__name__)
 
-class WelcomeImageGenerator:
+class ImageGenerator:
     def __init__(self):
-        self.width = 800
-        self.height = 300
-        self.avatar_size = 150
-    
-    def generate(self, user_name: str, user_avatar_url: str, server_name: str, 
-                      bg_color: str = '#7289da', text_color: str = '#ffffff',
-                      background_image_url: str = None, font_size: int = 40):
-        """Generar imagen de bienvenida"""
+        # Rutas a recursos
+        self.fonts_dir = 'bot/static/fonts'
+        self.images_dir = 'bot/static/images'
+        self.default_bg = os.path.join(self.images_dir, 'default_bg.png')
+        
+        # Asegurar directorios
+        os.makedirs(self.fonts_dir, exist_ok=True)
+        os.makedirs(self.images_dir, exist_ok=True)
+        
+        # Cargar fuentes (intentar cargar una fuente bonita si existe, sino default)
         try:
-            # Crear imagen base
+            # Intenta usar una fuente sans-serif común si está disponible en el sistema
+            # Para producción, es mejor incluir un archivo .ttf en bot/static/fonts/
+            self.font_large = ImageFont.truetype("arial.ttf", 60)
+            self.font_small = ImageFont.truetype("arial.ttf", 40)
+        except IOError:
+            logger.warning("No se encontró arial.ttf, usando fuente por defecto. El texto podría verse pequeño.")
+            self.font_large = ImageFont.load_default()
+            # Intentar escalar la fuente por defecto si es posible (Pillow moderno)
+            try:
+                 self.font_large = ImageFont.load_default(size=60)
+                 self.font_small = ImageFont.load_default(size=40)
+            except TypeError:
+                 # Fallback para versiones viejas de Pillow
+                 self.font_large = ImageFont.load_default()
+                 self.font_small = ImageFont.load_default()
+
+    def generate(self, user_name, user_avatar_url, server_name, bg_color='#7289da', text_color='#ffffff', background_image_url=None, font_size=None):
+        """Genera una imagen de bienvenida"""
+        try:
+            # 1. Configuración del lienzo
+            width = 800
+            height = 300  # Altura estándar para banners
+            
+            # 2. Crear fondo
             if background_image_url:
-                # Usar imagen de fondo personalizada
-                img = self._download_background(background_image_url)
-                if not img:
-                    # Fallback a color sólido si falla la descarga
-                    img = Image.new('RGBA', (self.width, self.height), bg_color)
-                else:
-                    if img.mode != 'RGBA':
-                        img = img.convert('RGBA')
+                try:
+                    # Descargar imagen de fondo
+                    response = requests.get(background_image_url, timeout=5)
+                    response.raise_for_status()
+                    background = Image.open(io.BytesIO(response.content)).convert('RGBA')
+                    # Redimensionar y recortar para llenar el lienzo
+                    background = ImageOps.fit(background, (width, height), method=Image.Resampling.LANCZOS, centering=(0.5, 0.5))
+                except Exception as e:
+                    logger.error(f"Error loading background image: {e}. Using color.")
+                    background = Image.new('RGBA', (width, height), color=bg_color)
             else:
                 # Usar color sólido
-                img = Image.new('RGBA', (self.width, self.height), bg_color)
+                background = Image.new('RGBA', (width, height), color=bg_color)
+
+            # Crear capa de dibujo
+            draw = ImageDraw.Draw(background)
             
-            # Aplicar superposición oscura para mejorar legibilidad
-            overlay = Image.new('RGBA', img.size, (0, 0, 0, 100)) # ~40% de opacidad
-            img = Image.alpha_composite(img, overlay)
-            
-            draw = ImageDraw.Draw(img)
-            
-            # Descargar avatar del usuario
-            avatar = self._download_avatar(user_avatar_url)
-            if avatar:
-                # Hacer el avatar circular
-                avatar = self._make_circular(avatar)
-                # Pegar avatar en la imagen
-                avatar_x = (self.width - self.avatar_size) // 2
-                avatar_y = 30
-                img.paste(avatar, (avatar_x, avatar_y), avatar)
-            
-            # Agregar texto
+            # 3. Procesar Avatar
             try:
-                # Intentar usar fuente personalizada
-                # Usar una fuente más grande y legible si es posible
-                try:
-                    # Intentar cargar una fuente del sistema común en Linux/Docker
-                    title_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", font_size + 10)
-                    subtitle_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", font_size - 5)
-                except:
-                    # Intentar cargar una fuente del sistema común en Windows
-                    title_font = ImageFont.truetype("arialbd.ttf", font_size + 10)
-                    subtitle_font = ImageFont.truetype("arial.ttf", font_size - 5)
-            except:
-                # Fallback a fuente por defecto (muy pequeña, pero mejor que nada)
-                title_font = ImageFont.load_default()
-                subtitle_font = ImageFont.load_default()
+                avatar_response = requests.get(user_avatar_url, timeout=5)
+                avatar_response.raise_for_status()
+                avatar = Image.open(io.BytesIO(avatar_response.content)).convert('RGBA')
+                
+                # Redimensionar avatar
+                avatar_size = 180
+                avatar = avatar.resize((avatar_size, avatar_size), Image.Resampling.LANCZOS)
+                
+                # Crear máscara circular
+                mask = Image.new('L', (avatar_size, avatar_size), 0)
+                draw_mask = ImageDraw.Draw(mask)
+                draw_mask.ellipse((0, 0, avatar_size, avatar_size), fill=255)
+                
+                # Aplicar máscara
+                avatar_circular = Image.new('RGBA', (avatar_size, avatar_size), (0, 0, 0, 0))
+                avatar_circular.paste(avatar, (0, 0), mask=mask)
+                
+                # Pegar avatar en el fondo (centrado verticalmente a la izquierda)
+                avatar_x = 60
+                avatar_y = (height - avatar_size) // 2
+                background.paste(avatar_circular, (avatar_x, avatar_y), mask=avatar_circular)
+                
+                # Definir inicio del texto a la derecha del avatar
+                text_start_x = avatar_x + avatar_size + 40
+                
+            except Exception as e:
+                logger.error(f"Error processing avatar: {e}")
+                # Si falla el avatar, el texto empieza más a la izquierda
+                text_start_x = 60
+
+            # 4. Dibujar Texto
+            welcome_text = "Bienvenido/a"
+            username_text = user_name
             
-            # Texto de bienvenida
-            welcome_text = f"¡Bienvenido!"
-            name_text = user_name
-            server_text = f"a {server_name}"
+            # Calcular el centro vertical del área de texto
+            text_area_center_y = height // 2
+            text_area_width = width - text_start_x - 20 # Espacio restante para texto
+
+            # --- CORRECCIÓN DE POSICIÓN DEL TEXTO ---
             
-            # Calcular posiciones centradas
-            y_offset = avatar_y + self.avatar_size + 20
+            # Usamos 'anchor' para posicionar el texto más fácilmente.
+            # 'ls' = left baseline (izquierda, línea base)
+            # 'lt' = left top (izquierda, arriba)
+
+            # Posición Y del texto de bienvenida (un poco más arriba del centro)
+            welcome_y = text_area_center_y - 20
             
-            # Dibujar textos
-            self._draw_centered_text(draw, welcome_text, y_offset, title_font, text_color)
-            self._draw_centered_text(draw, name_text, y_offset + 45, title_font, text_color)
-            self._draw_centered_text(draw, server_text, y_offset + 90, subtitle_font, text_color)
+            draw.text(
+                (text_start_x, welcome_y), 
+                welcome_text, 
+                font=self.font_large, 
+                fill=text_color,
+                anchor="ls" # Anclar la línea base del texto a la coordenada Y
+            )
+
+            # Posición Y del nombre de usuario (un poco más abajo del centro)
+            username_y = text_area_center_y + 10
+
+            draw.text(
+                (text_start_x, username_y), 
+                username_text, 
+                font=self.font_small, 
+                fill=text_color,
+                anchor="lt" # Anclar la parte superior del texto a la coordenada Y
+            )
             
-            # Convertir a bytes
-            img_bytes = io.BytesIO()
-            img.save(img_bytes, format='PNG')
-            img_bytes.seek(0)
+            # 5. Guardar en buffer
+            buffer = io.BytesIO()
+            background.save(buffer, format='PNG')
+            buffer.seek(0)
             
-            return img_bytes
+            return buffer
+
         except Exception as e:
-            logger.error(f"Error generating welcome image: {e}")
+            logger.error(f"Error generating image: {e}", exc_info=True)
             return None
-    
-    def _download_avatar(self, url: str):
-        """Descargar avatar del usuario"""
-        try:
-            response = requests.get(url, timeout=10)
-            if response.status_code == 200:
-                avatar = Image.open(io.BytesIO(response.content))
-                avatar = avatar.resize((self.avatar_size, self.avatar_size))
-                return avatar
-        except Exception as e:
-            logger.error(f"Error downloading avatar: {e}")
-        return None
-    
-    def _download_background(self, url: str):
-        """Descargar y preparar imagen de fondo"""
-        try:
-            response = requests.get(url, timeout=10)
-            if response.status_code == 200:
-                bg = Image.open(io.BytesIO(response.content))
-                # Convertir a RGB si es necesario
-                if bg.mode != 'RGB':
-                    bg = bg.convert('RGB')
-                # Redimensionar para cubrir el tamaño de la imagen
-                bg = bg.resize((self.width, self.height), Image.Resampling.LANCZOS)
-                return bg
-        except Exception as e:
-            logger.error(f"Error downloading background: {e}")
-        return None
-    
-    def _make_circular(self, img):
-        """Hacer una imagen circular"""
-        # Crear máscara circular
-        mask = Image.new('L', (self.avatar_size, self.avatar_size), 0)
-        draw = ImageDraw.Draw(mask)
-        draw.ellipse((0, 0, self.avatar_size, self.avatar_size), fill=255)
-        
-        # Aplicar máscara
-        output = Image.new('RGBA', (self.avatar_size, self.avatar_size), (0, 0, 0, 0))
-        output.paste(img, (0, 0))
-        output.putalpha(mask)
-        
-        return output
-    
-    def _draw_centered_text(self, draw, text, y, font, color):
-        """Dibujar texto centrado con borde"""
-        bbox = draw.textbbox((0, 0), text, font=font)
-        text_width = bbox[2] - bbox[0]
-        x = (self.width - text_width) // 2
-        
-        # Dibujar borde/sombra para mejorar legibilidad
-        stroke_color = 'black'
-        stroke_width = 2
-        
-        draw.text((x, y), text, font=font, fill=color, stroke_width=stroke_width, stroke_fill=stroke_color)
 
 # Instancia global
-image_generator = WelcomeImageGenerator()
+image_generator = ImageGenerator()
