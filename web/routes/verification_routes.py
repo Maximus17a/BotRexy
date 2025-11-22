@@ -17,15 +17,12 @@ def verification_config(guild_id):
         if 'user' not in session:
             return redirect(url_for('auth.login'))
         
-        # Obtener información del servidor desde Discord API
-        headers = {'Authorization': f"Bearer {session['access_token']}"}
+        # Obtener información del servidor desde la sesión
+        guilds = session.get('guilds', [])
+        guild_data = next((g for g in guilds if g['id'] == guild_id), None)
         
-        # Verificar que el usuario es administrador del servidor
-        user_guilds = requests.get('https://discord.com/api/users/@me/guilds', headers=headers).json()
-        guild_data = next((g for g in user_guilds if g['id'] == guild_id), None)
-        
-        if not guild_data or not (int(guild_data['permissions']) & 0x8):  # Administrator permission
-            return "No tienes permisos de administrador en este servidor", 403
+        if not guild_data:
+            return "No tienes permisos de administrador en este servidor o no existe", 403
         
         # Obtener canales y roles del servidor usando el bot
         guild = bot.get_guild(int(guild_id))
@@ -70,22 +67,32 @@ def game_roles_config(guild_id):
         if 'user' not in session:
             return redirect(url_for('auth.login'))
         
-        # Obtener información del servidor desde Discord API
-        headers = {'Authorization': f"Bearer {session['access_token']}"}
+        # Obtener información del servidor desde la sesión
+        guilds = session.get('guilds', [])
+        guild = next((g for g in guilds if g['id'] == guild_id), None)
         
-        # Verificar que el usuario es administrador del servidor
-        user_guilds = requests.get('https://discord.com/api/users/@me/guilds', headers=headers).json()
-        guild = next((g for g in user_guilds if g['id'] == guild_id), None)
-        
-        if not guild or not (int(guild['permissions']) & 0x8):  # Administrator permission
+        if not guild:
             return "No tienes permisos de administrador en este servidor", 403
         
         # Obtener canales y roles del servidor
+        guild_obj = bot.get_guild(int(guild_id))
         channels = []
         roles = []
         
+        if guild_obj:
+            channels = [
+                {'id': str(c.id), 'name': c.name} 
+                for c in guild_obj.channels 
+                if isinstance(c, discord.TextChannel)
+            ]
+            roles = [
+                {'id': str(r.id), 'name': r.name} 
+                for r in guild_obj.roles 
+                if not r.managed and r.name != "@everyone"
+            ]
+        
         # Obtener configuración actual
-        game_roles_config = {}
+        game_roles_config = db.get_game_roles_config(int(guild_id))
         
         return render_template(
             'game_roles_config.html',
