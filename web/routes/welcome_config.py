@@ -104,7 +104,6 @@ def preview_welcome(guild_id):
         background_image_url = data.get('background_image_url')
         if background_image_url and background_image_url.startswith('/'):
             # Convertir ruta relativa a absoluta
-            from flask import current_app
             background_image_url = request.host_url.rstrip('/') + background_image_url
         
         image_bytes = image_generator.generate(

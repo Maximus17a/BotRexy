@@ -120,22 +120,14 @@
                     <h5 class="mb-0"><i class="bi bi-link-45deg"></i> Enlaces Rápidos</h5>
                 </div>
                 <div class="card-body">
-                    <div class="d-grid gap-2">                        <a href="{{ url_for('welcome_config.welcome_config', guild_id=guild.id) }}" class="btn btn-primary w-100">
+                    <div class="d-grid gap-2">
+                        <a href="{{ url_for('welcome.welcome_editor', guild_id=guild.id) }}" class="btn btn-primary w-100">
                             <i class="bi bi-hand-wave"></i> Configurar Bienvenida
                         </a>
-                    </div>
-                    <div class="col-md-6 mb-3">
-                        <a href="/guilds/{{ guild.id }}/verification" class="btn btn-success w-100">
-                            <i class="bi bi-shield-check"></i> Configurar Verificación
-                        </a>
-                    </div>
-                    <div class="col-md-6 mb-3">
-                        <a href="/guilds/{{ guild.id }}/game-roles" class="btn btn-info w-100">
-                            <i class="bi bi-controller"></i> Roles de Juegos
-                        </a>                     <button class="btn btn-outline-info" id="viewLeaderboard">
+                        <button class="btn btn-outline-info w-100" id="viewLeaderboard">
                             <i class="bi bi-trophy"></i> Ver Ranking
                         </button>
-                        <button class="btn btn-outline-secondary" id="viewLogs">
+                        <button class="btn btn-outline-secondary w-100" id="viewLogs">
                             <i class="bi bi-journal-text"></i> Ver Logs
                         </button>
                     </div>

@@ -50,7 +50,12 @@ class Welcome(commands.Cog):
                     text_color = welcome_config.get('image_text_color', '#ffffff')
                     background_image_url = welcome_config.get('background_image_url')
                     
-                    image_bytes = await image_generator.generate(
+                    # Convertir ruta relativa a absoluta si es necesario
+                    if background_image_url and background_image_url.startswith('/'):
+                        # Necesitamos la URL completa para la descarga
+                        background_image_url = None  # Por ahora usar None, se puede configurar URL base
+                    
+                    image_bytes = image_generator.generate(
                         user_name=member.display_name,
                         user_avatar_url=avatar_url,
                         server_name=member.guild.name,
