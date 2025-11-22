@@ -262,7 +262,8 @@ class Database:
                 'guild_id': str(guild_id),
                 'channel_id': None,
                 'verified_role_id': None,
-                'message': '¡Bienvenido! Por favor verifica que eres humano.'
+                # Actualizado para coincidir con la imagen
+                'message': '¡Bienvenido/a a nuestro servidor! Para acceder a todos los canales, por favor lee las reglas y acepta al final.'
             }
             response = self.client.table('verification_config').insert(data).execute()
             return response.data[0] if response.data else None

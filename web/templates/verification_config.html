@@ -119,6 +119,7 @@
     </div>
 </div>
 
+{% block extra_js %}
 <script>
 document.getElementById('verificationForm').addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -135,6 +136,7 @@ document.getElementById('verificationForm').addEventListener('submit', async (e)
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
+                // El header X-CSRFToken se inyecta automáticamente gracias a main.js
             },
             body: JSON.stringify(data)
         });
@@ -142,13 +144,16 @@ document.getElementById('verificationForm').addEventListener('submit', async (e)
         const result = await response.json();
         
         if (result.success) {
-            showAlert('success', 'Configuración guardada correctamente');
+            // CORREGIDO: Usar showToast(mensaje, tipo)
+            showToast('Configuración guardada correctamente', 'success');
         } else {
-            showAlert('danger', 'Error al guardar: ' + result.error);
+            showToast('Error al guardar: ' + (result.error || 'Error desconocido'), 'danger');
         }
     } catch (error) {
-        showAlert('danger', 'Error de conexión');
+        console.error(error);
+        showToast('Error de conexión', 'danger');
     }
 });
 </script>
+{% endblock %}
 {% endblock %}

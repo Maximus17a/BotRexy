@@ -4,6 +4,7 @@ from discord import app_commands
 from bot.utils.database import db
 from bot.utils.image_gen import image_generator
 import logging
+import config  # <--- Asegúrate de importar config aquí
 
 logger = logging.getLogger(__name__)
 
@@ -50,10 +51,12 @@ class Welcome(commands.Cog):
                     text_color = welcome_config.get('image_text_color', '#ffffff')
                     background_image_url = welcome_config.get('background_image_url')
                     
-                    # Convertir ruta relativa a absoluta si es necesario
+                    # --- CORRECCIÓN AQUÍ ---
+                    # Convertir ruta relativa a absoluta usando localhost
                     if background_image_url and background_image_url.startswith('/'):
-                        # Necesitamos la URL completa para la descarga
-                        background_image_url = None  # Por ahora usar None, se puede configurar URL base
+                        # Construimos la URL local para que el bot pueda descargarla del servidor web
+                        background_image_url = f"http://127.0.0.1:{config.WEB_PORT}{background_image_url}"
+                    # -----------------------
                     
                     # Definir el embed antes de usarlo
                     embed = discord.Embed(
@@ -61,12 +64,12 @@ class Welcome(commands.Cog):
                         description=message_text,
                         color=discord.Color.blue()
                     )
-                    # No usar thumbnail si vamos a usar imagen generada
-                    # embed.set_thumbnail(url=member.display_avatar.url)
+                    
                     embed.set_footer(text=f"Miembros totales: {member.guild.member_count}")
 
                     # Verificar si la generación de la imagen devuelve datos válidos
                     try:
+                        # Nota: generate es síncrono, no usar await aquí
                         image_bytes = image_generator.generate(
                             user_name=member.display_name,
                             user_avatar_url=avatar_url,
@@ -80,7 +83,6 @@ class Welcome(commands.Cog):
                         if image_bytes:
                             file = discord.File(image_bytes, filename='welcome.png')
                             embed.set_image(url='attachment://welcome.png')
-                            # No poner thumbnail si ya tenemos la imagen generada con el avatar
                             embed.set_thumbnail(url=None)
                             await channel.send(embed=embed, file=file)
                         else:
@@ -92,7 +94,7 @@ class Welcome(commands.Cog):
                         embed.set_thumbnail(url=member.display_avatar.url)
                         await channel.send(embed=embed)
                 except Exception as e:
-                    logger.error(f"Error generating welcome image: {e}")
+                    logger.error(f"Error logic welcome image: {e}")
                     await channel.send(message_text)
             else:
                 # Enviar solo texto
@@ -100,7 +102,8 @@ class Welcome(commands.Cog):
         
         except Exception as e:
             logger.error(f"Error in welcome message: {e}")
-    
+
+    # ... (Resto de comandos setwelcome, etc. sin cambios) ...
     @app_commands.command(name="setwelcome", description="Configurar canal de bienvenida (Admin)")
     @app_commands.checks.has_permissions(administrator=True)
     async def set_welcome(self, interaction: discord.Interaction, canal: discord.TextChannel):
