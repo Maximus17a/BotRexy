@@ -6,7 +6,15 @@ logger = logging.getLogger(__name__)
 
 class Database:
     def __init__(self):
-        self.client: Client = create_client(config.SUPABASE_URL, config.SUPABASE_KEY)
+        try:
+            # Crear cliente sin opciones adicionales para evitar problemas de compatibilidad
+            self.client: Client = create_client(
+                supabase_url=config.SUPABASE_URL,
+                supabase_key=config.SUPABASE_KEY
+            )
+        except Exception as e:
+            logger.error(f"Error initializing Supabase client: {e}")
+            raise
     
     # Guild Management
     async def get_guild_config(self, guild_id: int):
