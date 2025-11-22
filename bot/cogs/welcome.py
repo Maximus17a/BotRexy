@@ -61,7 +61,8 @@ class Welcome(commands.Cog):
                         description=message_text,
                         color=discord.Color.blue()
                     )
-                    embed.set_thumbnail(url=member.display_avatar.url)
+                    # No usar thumbnail si vamos a usar imagen generada
+                    # embed.set_thumbnail(url=member.display_avatar.url)
                     embed.set_footer(text=f"Miembros totales: {member.guild.member_count}")
 
                     # Verificar si la generación de la imagen devuelve datos válidos
@@ -73,19 +74,22 @@ class Welcome(commands.Cog):
                             bg_color=bg_color,
                             text_color=text_color,
                             background_image_url=background_image_url,
-                            font_size=24,
-                            padding=20
+                            font_size=40
                         )
 
                         if image_bytes:
                             file = discord.File(image_bytes, filename='welcome.png')
                             embed.set_image(url='attachment://welcome.png')
+                            # No poner thumbnail si ya tenemos la imagen generada con el avatar
+                            embed.set_thumbnail(url=None)
                             await channel.send(embed=embed, file=file)
                         else:
                             logger.warning("La generación de la imagen devolvió None. Enviando solo texto.")
+                            embed.set_thumbnail(url=member.display_avatar.url)
                             await channel.send(embed=embed)
                     except Exception as e:
                         logger.error(f"Error generando la imagen de bienvenida: {e}")
+                        embed.set_thumbnail(url=member.display_avatar.url)
                         await channel.send(embed=embed)
                 except Exception as e:
                     logger.error(f"Error generating welcome image: {e}")

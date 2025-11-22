@@ -49,10 +49,17 @@ class WelcomeImageGenerator:
             # Agregar texto
             try:
                 # Intentar usar fuente personalizada
-                title_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", font_size)
-                subtitle_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", font_size - 15)
+                # Usar una fuente más grande y legible si es posible
+                try:
+                    # Intentar cargar una fuente del sistema común en Linux/Docker
+                    title_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", font_size + 10)
+                    subtitle_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", font_size - 5)
+                except:
+                    # Intentar cargar una fuente del sistema común en Windows
+                    title_font = ImageFont.truetype("arialbd.ttf", font_size + 10)
+                    subtitle_font = ImageFont.truetype("arial.ttf", font_size - 5)
             except:
-                # Fallback a fuente por defecto
+                # Fallback a fuente por defecto (muy pequeña, pero mejor que nada)
                 title_font = ImageFont.load_default()
                 subtitle_font = ImageFont.load_default()
             
