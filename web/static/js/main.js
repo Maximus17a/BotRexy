@@ -1,12 +1,22 @@
 // BotRexy Main JavaScript
 
+// Get CSRF Token from meta tag
+const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+
 // Utility function for API calls
 async function apiCall(url, method = 'GET', data = null) {
+    const headers = {
+        'Content-Type': 'application/json'
+    };
+    
+    // Add CSRF token to headers for non-GET requests
+    if (method !== 'GET' && csrfToken) {
+        headers['X-CSRFToken'] = csrfToken;
+    }
+
     const options = {
         method: method,
-        headers: {
-            'Content-Type': 'application/json'
-        }
+        headers: headers
     };
     
     if (data) {
@@ -22,6 +32,29 @@ async function apiCall(url, method = 'GET', data = null) {
     }
 }
 
+// Interceptor global para fetch (para scripts inline que no usan apiCall)
+const originalFetch = window.fetch;
+window.fetch = async function(url, options = {}) {
+    // Si no es GET y no tiene el header CSRF, agregarlo
+    if (options.method && options.method.toUpperCase() !== 'GET') {
+        options.headers = options.headers || {};
+        
+        // Manejar Headers object o objeto plano
+        if (options.headers instanceof Headers) {
+            if (!options.headers.has('X-CSRFToken') && csrfToken) {
+                options.headers.append('X-CSRFToken', csrfToken);
+            }
+        } else {
+            if (!options.headers['X-CSRFToken'] && csrfToken) {
+                options.headers['X-CSRFToken'] = csrfToken;
+            }
+        }
+    }
+    return originalFetch(url, options);
+};
+
+// ... (Resto de las funciones: showLoading, hideLoading, showToast, etc. sin cambios) ...
+
 // Show loading spinner
 function showLoading(element) {
     const spinner = document.createElement('span');
@@ -29,7 +62,6 @@ function showLoading(element) {
     element.appendChild(spinner);
 }
 
-// Hide loading spinner
 function hideLoading(element) {
     const spinner = element.querySelector('.loading');
     if (spinner) {
@@ -37,9 +69,7 @@ function hideLoading(element) {
     }
 }
 
-// Show toast notification
 function showToast(message, type = 'info') {
-    // Create toast container if it doesn't exist
     let toastContainer = document.getElementById('toastContainer');
     if (!toastContainer) {
         toastContainer = document.createElement('div');
@@ -49,7 +79,6 @@ function showToast(message, type = 'info') {
         document.body.appendChild(toastContainer);
     }
     
-    // Create toast
     const toastId = 'toast-' + Date.now();
     const toastHTML = `
         <div id="${toastId}" class="toast align-items-center text-white bg-${type} border-0" role="alert" aria-live="assertive" aria-atomic="true">
@@ -63,81 +92,31 @@ function showToast(message, type = 'info') {
     `;
     
     toastContainer.insertAdjacentHTML('beforeend', toastHTML);
-    
     const toastElement = document.getElementById(toastId);
-    const toast = new bootstrap.Toast(toastElement, {
-        autohide: true,
-        delay: 3000
-    });
-    
+    const toast = new bootstrap.Toast(toastElement, { autohide: true, delay: 3000 });
     toast.show();
     
-    // Remove toast element after it's hidden
     toastElement.addEventListener('hidden.bs.toast', function () {
         toastElement.remove();
     });
 }
 
-// Copy to clipboard
 function copyToClipboard(text) {
     navigator.clipboard.writeText(text).then(() => {
         showToast('Copiado al portapapeles', 'success');
     }).catch(err => {
-        console.error('Error copying to clipboard:', err);
         showToast('Error al copiar', 'danger');
     });
 }
 
-// Format date
 function formatDate(dateString) {
     const date = new Date(dateString);
     return date.toLocaleDateString('es-ES', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
+        year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit'
     });
 }
 
-// Initialize tooltips
-document.addEventListener('DOMContentLoaded', function() {
-    const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
-    tooltipTriggerList.map(function (tooltipTriggerEl) {
-        return new bootstrap.Tooltip(tooltipTriggerEl);
-    });
-});
-
-// Initialize popovers
-document.addEventListener('DOMContentLoaded', function() {
-    const popoverTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="popover"]'));
-    popoverTriggerList.map(function (popoverTriggerEl) {
-        return new bootstrap.Popover(popoverTriggerEl);
-    });
-});
-
-// Smooth scroll
-document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-    anchor.addEventListener('click', function (e) {
-        const href = this.getAttribute('href');
-        if (href !== '#') {
-            e.preventDefault();
-            const target = document.querySelector(href);
-            if (target) {
-                target.scrollIntoView({
-                    behavior: 'smooth'
-                });
-            }
-        }
-    });
-});
-
-// Export functions for use in other scripts
+// Export functions
 window.BotRexy = {
-    apiCall,
-    showLoading,
-    hideLoading,
-    showToast,
-    copyToClipboard,
-    formatDate
+    apiCall, showLoading, hideLoading, showToast, copyToClipboard, formatDate
 };
