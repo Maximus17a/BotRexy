@@ -55,26 +55,34 @@ class Welcome(commands.Cog):
                         # Necesitamos la URL completa para la descarga
                         background_image_url = None  # Por ahora usar None, se puede configurar URL base
                     
+                    # Ajustar la generación de imagen
                     image_bytes = image_generator.generate(
                         user_name=member.display_name,
                         user_avatar_url=avatar_url,
                         server_name=member.guild.name,
                         bg_color=bg_color,
                         text_color=text_color,
-                        background_image_url=background_image_url
+                        background_image_url=background_image_url,
+                        font_size=24,  # Ajustar tamaño de fuente
+                        padding=20     # Agregar espacio alrededor del texto
                     )
                     
+                    # Ajustar el diseño del embed
+                    embed = discord.Embed(
+                        title="¡Bienvenido!",
+                        description=message_text,
+                        color=discord.Color.blue()
+                    )
+                    embed.set_thumbnail(url=member.display_avatar.url)
+                    embed.set_footer(text=f"Miembros totales: {member.guild.member_count}")
+
                     if image_bytes:
                         file = discord.File(image_bytes, filename='welcome.png')
-                        embed = discord.Embed(
-                            description=message_text,
-                            color=discord.Color.blue()
-                        )
                         embed.set_image(url='attachment://welcome.png')
                         await channel.send(embed=embed, file=file)
                     else:
                         # Fallback sin imagen
-                        await channel.send(message_text)
+                        await channel.send(embed=embed)
                 except Exception as e:
                     logger.error(f"Error generating welcome image: {e}")
                     await channel.send(message_text)
