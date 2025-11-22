@@ -46,11 +46,14 @@ class GameRoles(commands.Cog):
             return
         
         try:
+            # Deferir la interacción inmediatamente para evitar timeout (error 10062)
+            await interaction.response.defer(ephemeral=True)
+            
             role_id = custom_id.replace('game_role_', '')
             role = interaction.guild.get_role(int(role_id))
             
             if not role:
-                await interaction.response.send_message(
+                await interaction.followup.send(
                     "❌ Error: Rol no encontrado.",
                     ephemeral=True
                 )
@@ -58,7 +61,7 @@ class GameRoles(commands.Cog):
             
             # Verificar jerarquía de roles
             if role >= interaction.guild.me.top_role:
-                await interaction.response.send_message(
+                await interaction.followup.send(
                     "❌ Error: No puedo asignar este rol porque es igual o superior a mi rol más alto. Por favor pide a un administrador que suba mi rol.",
                     ephemeral=True
                 )
@@ -68,27 +71,27 @@ class GameRoles(commands.Cog):
             if role in interaction.user.roles:
                 # Remover rol
                 await interaction.user.remove_roles(role, reason="Rol de juego removido")
-                await interaction.response.send_message(
+                await interaction.followup.send(
                     f"❌ Se te ha removido el rol **{role.name}**",
                     ephemeral=True
                 )
             else:
                 # Agregar rol
                 await interaction.user.add_roles(role, reason="Rol de juego agregado")
-                await interaction.response.send_message(
+                await interaction.followup.send(
                     f"✅ ¡Ahora tienes el rol **{role.name}**!",
                     ephemeral=True
                 )
         
         except discord.Forbidden:
-            await interaction.response.send_message(
+            await interaction.followup.send(
                 "❌ Error: No tengo permisos para gestionar roles. Verifica mi rol y permisos.",
                 ephemeral=True
             )
         except Exception as e:
             logger.error(f"Error in game role interaction: {e}")
             try:
-                await interaction.response.send_message(
+                await interaction.followup.send(
                     "❌ Error al cambiar rol.",
                     ephemeral=True
                 )
@@ -360,48 +363,8 @@ class GameRolesView(discord.ui.View):
                 style=style,
                 custom_id=f"game_role_{role_id}"
             )
-            button.callback = self.create_callback(role_id, game_name)
+            # No asignamos callback aquí porque usamos el listener global on_interaction
             self.add_item(button)
-    
-    def create_callback(self, role_id: str, game_name: str):
-        """Crear callback para cada botón"""
-        async def button_callback(interaction: discord.Interaction):
-            try:
-                role = interaction.guild.get_role(int(role_id))
-                
-                if not role:
-                    await interaction.response.send_message(
-                        "❌ Error: Rol no encontrado.",
-                        ephemeral=True
-                    )
-                    return
-                
-                # Verificar si el usuario ya tiene el rol
-                if role in interaction.user.roles:
-                    # Remover rol
-                    await interaction.user.remove_roles(role, reason="Rol de juego removido")
-                    emoji = GAME_EMOJIS.get(game_name, '🎮')
-                    await interaction.response.send_message(
-                        f"{emoji} Se te ha removido el rol de **{game_name}**",
-                        ephemeral=True
-                    )
-                else:
-                    # Agregar rol
-                    await interaction.user.add_roles(role, reason="Rol de juego agregado")
-                    emoji = GAME_EMOJIS.get(game_name, '🎮')
-                    await interaction.response.send_message(
-                        f"{emoji} ¡Ahora tienes el rol de **{game_name}**!",
-                        ephemeral=True
-                    )
-            
-            except Exception as e:
-                logger.error(f"Error in game role button: {e}")
-                await interaction.response.send_message(
-                    "❌ Error al cambiar rol. Por favor contacta a un administrador.",
-                    ephemeral=True
-                )
-        
-        return button_callback
 
 
 async def setup(bot):

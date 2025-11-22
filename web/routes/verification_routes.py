@@ -46,19 +46,20 @@ def verification_config(guild_id):
         
         # Obtener configuración actual
         verification_config = db.get_verification_config(int(guild_id))
+        guild_config = db.get_guild_config(int(guild_id))
         
         return render_template(
             'verification_config.html',
             guild=guild_data,
             channels=channels,
             roles=roles,
-            config={}, # Placeholder for general config
+            config=guild_config if guild_config else {},
             verification_config=verification_config
         )
     
     except Exception as e:
-        logger.error(f"Error in verification config: {e}")
-        return "Error al cargar configuración", 500
+        logger.error(f"Error in verification config: {e}", exc_info=True)
+        return f"Error al cargar configuración: {str(e)}", 500
 
 
 @verification_bp.route('/guilds/<guild_id>/game-roles')
