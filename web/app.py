@@ -20,6 +20,7 @@ logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
 app.config.from_object(config)  # Cargar configuración desde objeto
+app.config['MAX_CONTENT_LENGTH'] = config.MAX_CONTENT_LENGTH  # Aplicar límite de tamaño
 CORS(app)
 
 # Inicializar protección CSRF

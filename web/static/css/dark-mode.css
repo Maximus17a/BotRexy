@@ -1,0 +1,213 @@
+/* Dark Mode Styles for BotRexy */
+
+/* Variables para modo oscuro */
+:root {
+    --bg-color: #ffffff;
+    --text-color: #212529;
+    --card-bg: #ffffff;
+    --card-border: #dee2e6;
+    --navbar-bg: linear-gradient(135deg, #5865F2 0%, #7289DA 100%);
+    --footer-bg: #212529;
+    --input-bg: #ffffff;
+    --input-border: #ced4da;
+    --dropdown-bg: #ffffff;
+    --dropdown-hover: #f8f9fa;
+    --code-bg: #f4f4f4;
+    --scrollbar-track: #f1f1f1;
+    --scrollbar-thumb: #888;
+}
+
+/* Dark mode variables */
+[data-theme="dark"] {
+    --bg-color: #1a1d21;
+    --text-color: #e4e6eb;
+    --card-bg: #242729;
+    --card-border: #3a3f44;
+    --navbar-bg: linear-gradient(135deg, #4752c4 0%, #5b6fb8 100%);
+    --footer-bg: #18191a;
+    --input-bg: #3a3f44;
+    --input-border: #4e5358;
+    --dropdown-bg: #242729;
+    --dropdown-hover: #3a3f44;
+    --code-bg: #2d3139;
+    --scrollbar-track: #2d3139;
+    --scrollbar-thumb: #4e5358;
+}
+
+/* Aplicar colores del tema */
+body {
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Cards */
+.card {
+    background-color: var(--card-bg);
+    border-color: var(--card-border);
+    color: var(--text-color);
+}
+
+.card-header {
+    background-color: var(--card-bg);
+    border-bottom-color: var(--card-border);
+}
+
+.card-body {
+    background-color: var(--card-bg);
+}
+
+/* Navbar */
+.navbar-dark {
+    background: var(--navbar-bg) !important;
+}
+
+/* Footer */
+footer {
+    background-color: var(--footer-bg) !important;
+}
+
+/* Forms */
+.form-control,
+.form-select {
+    background-color: var(--input-bg);
+    border-color: var(--input-border);
+    color: var(--text-color);
+}
+
+.form-control:focus,
+.form-select:focus {
+    background-color: var(--input-bg);
+    color: var(--text-color);
+}
+
+.form-control::placeholder {
+    color: var(--text-color);
+    opacity: 0.6;
+}
+
+/* Dropdown menus */
+.dropdown-menu {
+    background-color: var(--dropdown-bg);
+    border-color: var(--card-border);
+}
+
+.dropdown-item {
+    color: var(--text-color);
+}
+
+.dropdown-item:hover,
+.dropdown-item:focus {
+    background-color: var(--dropdown-hover);
+    color: var(--text-color);
+}
+
+/* Code blocks */
+code {
+    background-color: var(--code-bg);
+    color: var(--text-color);
+}
+
+/* Scrollbar */
+::-webkit-scrollbar-track {
+    background: var(--scrollbar-track);
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--scrollbar-thumb);
+}
+
+/* Text colors */
+.text-muted {
+    color: #6c757d !important;
+}
+
+[data-theme="dark"] .text-muted {
+    color: #adb5bd !important;
+}
+
+/* Alerts en modo oscuro */
+[data-theme="dark"] .alert {
+    background-color: var(--card-bg);
+    border-color: var(--card-border);
+    color: var(--text-color);
+}
+
+[data-theme="dark"] .alert-warning {
+    background-color: #3d3416;
+    border-color: #5a4c1e;
+    color: #ffc107;
+}
+
+[data-theme="dark"] .alert-danger {
+    background-color: #3d1616;
+    border-color: #5a1e1e;
+    color: #dc3545;
+}
+
+[data-theme="dark"] .alert-success {
+    background-color: #163d16;
+    border-color: #1e5a1e;
+    color: #28a745;
+}
+
+[data-theme="dark"] .alert-info {
+    background-color: #16293d;
+    border-color: #1e3d5a;
+    color: #17a2b8;
+}
+
+/* Tables */
+[data-theme="dark"] .table {
+    color: var(--text-color);
+}
+
+[data-theme="dark"] .table-striped tbody tr:nth-of-type(odd) {
+    background-color: rgba(255, 255, 255, 0.05);
+}
+
+/* Modals */
+[data-theme="dark"] .modal-content {
+    background-color: var(--card-bg);
+    color: var(--text-color);
+}
+
+[data-theme="dark"] .modal-header,
+[data-theme="dark"] .modal-footer {
+    border-color: var(--card-border);
+}
+
+/* Botón de cambio de tema */
+.theme-toggle {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #5865F2 0%, #7289DA 100%);
+    border: none;
+    color: white;
+    font-size: 1.5rem;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.theme-toggle:hover {
+    transform: scale(1.1);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
+}
+
+.theme-toggle:active {
+    transform: scale(0.95);
+}
+
+/* Animación de transición suave */
+* {
+    transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+}

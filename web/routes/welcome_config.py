@@ -183,41 +183,63 @@ def upload_background(guild_id):
         # Verificar acceso
         guilds = session.get('guilds', [])
         if not any(g['id'] == guild_id for g in guilds):
-            return jsonify({'error': 'Unauthorized'}), 403
+            return jsonify({'error': 'No autorizado'}), 403
         
         if 'background_image' not in request.files:
-            return jsonify({'error': 'No file provided'}), 400
+            return jsonify({'error': 'No se proporcionó ningún archivo'}), 400
         
         file = request.files['background_image']
         
         if file.filename == '':
-            return jsonify({'error': 'No file selected'}), 400
+            return jsonify({'error': 'No se seleccionó ningún archivo'}), 400
         
-        if file and allowed_file(file.filename):
-            # Generar nombre único
-            ext = file.filename.rsplit('.', 1)[1].lower()
-            filename = f"{guild_id}_{uuid.uuid4().hex}.{ext}"
-            filepath = os.path.join(UPLOAD_FOLDER, filename)
-            
-            # Guardar archivo
-            file.save(filepath)
-            
-            # Generar URL de la imagen
-            image_url = f"/static/images/backgrounds/{filename}"
-            
-            # Actualizar configuración en base de datos
-            db.update_welcome_config(int(guild_id), background_image_url=image_url)
-            
+        if not allowed_file(file.filename):
+            return jsonify({'error': 'Tipo de archivo no permitido. Usa: PNG, JPG, JPEG, GIF o WEBP'}), 400
+        
+        # Verificar tamaño del archivo (5MB max)
+        file.seek(0, os.SEEK_END)
+        file_size = file.tell()
+        file.seek(0)
+        
+        max_size = 5 * 1024 * 1024  # 5MB
+        if file_size > max_size:
             return jsonify({
-                'success': True,
-                'image_url': image_url
-            })
-        else:
-            return jsonify({'error': 'Invalid file type'}), 400
+                'error': f'El archivo es demasiado grande. Tamaño máximo: 5MB. Tu archivo: {file_size / (1024*1024):.2f}MB'
+            }), 413
+        
+        # Generar nombre único
+        ext = file.filename.rsplit('.', 1)[1].lower()
+        filename = f"{guild_id}_{uuid.uuid4().hex}.{ext}"
+        filepath = os.path.join(UPLOAD_FOLDER, filename)
+        
+        # Asegurar que el directorio existe
+        os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+        
+        # Guardar archivo
+        file.save(filepath)
+        
+        # Verificar que el archivo se guardó correctamente
+        if not os.path.exists(filepath):
+            logger.error(f"File was not saved: {filepath}")
+            return jsonify({'error': 'Error al guardar el archivo'}), 500
+        
+        # Generar URL de la imagen
+        image_url = f"/static/images/backgrounds/{filename}"
+        
+        # Actualizar configuración en base de datos
+        db.update_welcome_config(int(guild_id), background_image_url=image_url)
+        
+        logger.info(f"Background image uploaded successfully: {filepath}")
+        
+        return jsonify({
+            'success': True,
+            'image_url': image_url,
+            'filename': filename
+        })
             
     except Exception as e:
-        logger.error(f"Error uploading background: {e}")
-        return jsonify({'error': 'Internal server error'}), 500
+        logger.error(f"Error uploading background: {e}", exc_info=True)
+        return jsonify({'error': f'Error interno del servidor: {str(e)}'}), 500
 
 @bp.route('/api/<guild_id>/remove-background', methods=['POST'])
 @login_required

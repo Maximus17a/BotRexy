@@ -74,13 +74,16 @@
                         </div>
 
                         <div id="imageSettings">
-                            <div class="mb-3">
-                                <label for="backgroundImage" class="form-label">Imagen de Fondo</label>
-                                <input type="file" class="form-control" id="backgroundImage" 
-                                       accept="image/png,image/jpeg,image/jpg,image/gif,image/webp">
-                                <div class="form-text">
-                                    Sube una imagen personalizada para el fondo. Si no subes ninguna, se usará el color de fondo.
-                                </div>
+                        <div class="mb-3">
+                            <label for="backgroundImage" class="form-label">Imagen de Fondo</label>
+                            <input type="file" class="form-control" id="backgroundImage" 
+                                   accept="image/png,image/jpeg,image/jpg,image/gif,image/webp">
+                            <div class="form-text">
+                                Sube una imagen personalizada para el fondo (máx. 5MB). Si no subes ninguna, se usará el color de fondo.
+                            </div>
+                            <div id="fileSizeWarning" class="alert alert-warning mt-2" style="display: none;">
+                                <i class="bi bi-exclamation-triangle"></i> <span id="fileSizeMessage"></span>
+                            </div>
                                 <div id="currentBackgroundPreview" class="mt-2" style="display: none;">
                                     <p class="mb-1"><strong>Imagen actual:</strong></p>
                                     <img id="currentBackgroundImg" src="" alt="Fondo actual" 
@@ -298,7 +301,8 @@ document.getElementById('welcomeForm').addEventListener('submit', async (e) => {
                 const result = await uploadResponse.json();
                 window.currentBackgroundUrl = result.image_url;
             } else {
-                alert('Error al subir la imagen de fondo');
+                const errorData = await uploadResponse.json();
+                alert('Error al subir la imagen: ' + (errorData.error || 'Error desconocido'));
                 return;
             }
         } catch (error) {
@@ -399,6 +403,25 @@ document.getElementById('removeBackgroundBtn').addEventListener('click', async (
     } catch (error) {
         console.error('Error removing background:', error);
         alert('Error al eliminar la imagen de fondo');
+    }
+});
+
+// Validación de tamaño de archivo
+document.getElementById('backgroundImage').addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    const maxSize = 5 * 1024 * 1024; // 5MB
+    const warning = document.getElementById('fileSizeWarning');
+    const message = document.getElementById('fileSizeMessage');
+    
+    if (file) {
+        if (file.size > maxSize) {
+            const sizeMB = (file.size / (1024 * 1024)).toFixed(2);
+            message.textContent = `El archivo es demasiado grande (${sizeMB}MB). El tamaño máximo es 5MB.`;
+            warning.style.display = 'block';
+            e.target.value = ''; // Limpiar selección
+        } else {
+            warning.style.display = 'none';
+        }
     }
 });
 
